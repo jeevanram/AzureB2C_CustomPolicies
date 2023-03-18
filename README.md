@@ -15,3 +15,28 @@ Stages of User Migration
 3)	Any login attempt by the user after the initial login validates the user credentials with AzureB2C.
 
 ![Just in time migration flow Sign In](Media/signin.png)
+
+Setup Process 
+
+1) Create a user attribute “requiresMigration” using Graph API 
+   - Register an Application for User Migration in AzureB2C
+     ![image](https://user-images.githubusercontent.com/5312171/226082334-79caff0f-569d-40c4-b348-a1e5e0de6280.png)
+     - Create a new application 
+     - For Name, use B2CUserMigration. 
+     - For Supported account types, use Accounts in this organizational directory only. 
+     - For Redirect URI, use type Web: https://localhost (it's not relevant for this application). 
+     - Click Register 
+   - Create a Client Secret
+     
+     ![image](https://user-images.githubusercontent.com/5312171/226082459-817a36cf-d416-473a-97e6-83d7b70dc8eb.png)
+     - Click on Certificates and Secrets menu and add a new key (also known as client secret). Copy the key for later. 
+     - Key name: client-secret 
+       ![image](https://user-images.githubusercontent.com/5312171/226082600-ddff604a-8f37-4b32-b342-32dc3cef1286.png)
+
+   - GET AccessToken to invoke MicrosoftGraph API 
+     - POST - https://login.microsoftonline.com/yourtenant.onmicrosoft.com/oauth2/token 
+     - BODY: x-www-form-urlencoded 
+     - grant_type = client_credentials 
+     - client_id = \<\<Application Id of B2CUserMigration\>\> 
+     - client_secret=\<\<Client Secret Key created for B2CUserMigration Application\>\> 
+     - Resource= https://graph.microsoft.com 
