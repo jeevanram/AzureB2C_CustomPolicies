@@ -40,3 +40,30 @@ Setup Process
      - client_id = \<\<Application Id of B2CUserMigration\>\> 
      - client_secret=\<\<Client Secret Key created for B2CUserMigration Application\>\> 
      - Resource= https://graph.microsoft.com 
+       ![image](https://user-images.githubusercontent.com/5312171/226083295-22780193-e602-4c73-b878-1b5b5470780c.png)
+  
+   - Create User Attribute “requiresMigration” using Graph API 
+     - POST - https://graph.microsoft.com/v1.0/applications/\<\<b2c-extensions-app Application ObjectId\>\>/extensionProperties 
+     - b2c-extensions-app is a default application in App registrations “b2c-extensions-app. Do not modify. Used by AADB2C for storing user data” 
+       ![image](https://user-images.githubusercontent.com/5312171/226083454-332e56bd-e36d-44f9-8342-7fc460536c56.png)
+     - On the Request Header, copy paste the access_token generated above. 
+       ![image](https://user-images.githubusercontent.com/5312171/226083535-c1b78fbd-1f1c-47ce-9fa7-bbad069b09fb.png)
+     - Payload to create the user attribute: <br/>
+       ```diff
+       {  
+       "name": "requiresMigration",  
+       "dataType": "Boolean",  
+       "targetObjects": ["User"]
+       }
+      ![image](https://user-images.githubusercontent.com/5312171/226084216-72934577-7bae-4540-909e-669eaf035da3.png)
+
+    - Grant administrative permission to your application 
+      - Click on API permissions. 
+      - Click on Add a Permission -> Microsoft Graph. 
+      - Select Application Permissions, select the Directory.ReadWrite.All and Application.ReadWrite.All permissions and click Save. 
+      - Finally, back in the Application Permissions menu, click on the Grant admin Consent button. 
+        
+      ![image](https://user-images.githubusercontent.com/5312171/226084316-0f7d207c-9597-4767-bdac-12ef166c1d34.png)
+
+
+ 
