@@ -65,5 +65,7 @@ Setup Process
         
       ![image](https://user-images.githubusercontent.com/5312171/226084316-0f7d207c-9597-4767-bdac-12ef166c1d34.png)
 
-
+ 2) Pre-Migration Step: Migrating Existing User 
+    - Use the attribute name “extension_975********************_requiresMigration” 	while migrating users to AzureB2C using Graph API. 
+    - POST - https://graph.microsoft.com/v1.0/users 
  
