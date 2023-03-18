@@ -68,4 +68,41 @@ Setup Process
  2) Pre-Migration Step: Migrating Existing User 
     - Use the attribute name “extension_975********************_requiresMigration” 	while migrating users to AzureB2C using Graph API. 
     - POST - https://graph.microsoft.com/v1.0/users 
- 
+    - On the Request Header, copy paste the access_token generated above. 
+      ![image](https://user-images.githubusercontent.com/5312171/226113225-3b8e1c65-ef1d-4638-8a20-cf884937eb8e.png)
+    - Payload to create the user: 
+      <<Use the user attribute generated - extension_975********************_requiresMigration>>
+      ```diff
+      { 
+       "displayName": "TestFN TestLN", 
+       "identities": [ 
+         { 
+           "signInType": "emailAddress", 
+           "issuer": "yourtenant.onmicrosoft.com", 
+           "issuerAssignedId": "test@email.com" 
+         } 
+       ], 
+       "passwordProfile" : { 
+         "password": <<TempPassword>>, 
+         "forceChangePasswordNextSignIn": false 
+       }, 
+       "passwordPolicies": "DisablePasswordExpiration", 
+       "extension_975********************_requiresMigration": true 
+      }
+     ![image](https://user-images.githubusercontent.com/5312171/226114312-deaa24c0-58af-4d52-941d-c8d0bf0737c7.png)
+
+ 3) Register Custom Policy Applications 
+  - Create Signing Key – TokenSigningKeyContainer – Key Type: RSA – Key Usage: Signature 
+  - Create Encryption Key – TokenEncryptionKeyContainer – Key Type: RSA – Key Usage: Encryption 
+  - Register two applications,  
+    - IdentityExperienceFramework, a web API. 
+    - ProxyIdentityExperienceFramework, a native app with delegated permission to the IdentityExperienceFramework app. 
+    - You need to register these two applications in your Azure AD B2C tenant only once. 
+      ![image](https://user-images.githubusercontent.com/5312171/226114949-4194d9b5-c483-4ab6-b7ef-16ec2b37e313.png)
+      
+      ![image](https://user-images.githubusercontent.com/5312171/226115102-2e855e10-c758-4de0-b17c-a172be1ca03e.png)
+
+      ![image](https://user-images.githubusercontent.com/5312171/226115003-c8b02d93-6138-4e25-bd42-41bb559035e0.png)
+
+
+      
