@@ -104,5 +104,15 @@ Setup Process
 
       ![image](https://user-images.githubusercontent.com/5312171/226115003-c8b02d93-6138-4e25-bd42-41bb559035e0.png)
 
-
+ 4) How Custom Policy works?
+    ![image](https://user-images.githubusercontent.com/5312171/226186086-fd96d5b1-dabc-484f-b8bc-8659f9f59c0e.png)
+    
+    - A Base file that contains most of the definitions. To help with troubleshooting and long-term maintenance of your policies, try to minimize the number of changes       you make to this file. 
+    - A Localization file that holds the localization strings. This policy file is derived from the Base file. Use this file to accommodate different languages to suit       your customer needs. 
+    - An Extensions file that holds the unique configuration changes for your tenant. This policy file is derived from the Localization file. Use this file to add new       functionality or override existing functionality. For example, use this file to federate with new identity providers. 
+    - A Relying Party (RP) file that is the single task-focused file that is invoked directly by the relying party application, such as your web, mobile, or desktop         applications. Each unique task, such as sign-up, sign-in, or profile edit, requires its own relying party policy file. This policy file is derived from the             extensions file. 
+    - The inheritance model is as follows: 
+      - The child policy at any level can inherit from the parent policy and extend it by adding new elements. 
+      - For more complex scenarios, you can add more inheritance levels (up to 10 in total). 
+      - You can add more relying party policies. For example, delete my account, change a phone number, SAML relying party policy and more.
       
