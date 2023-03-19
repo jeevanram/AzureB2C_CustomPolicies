@@ -116,3 +116,13 @@ Setup Process
       - For more complex scenarios, you can add more inheritance levels (up to 10 in total). 
       - You can add more relying party policies. For example, delete my account, change a phone number, SAML relying party policy and more.
       
+ 5) Custom Policy Starter Pack 
+    https://github.com/Azure-Samples/active-directory-b2c-custom-policy-starterpack 
+    - Azure AD B2C custom policy starter pack comes with several pre-built policies to get you started quickly. Each of these starter packs contains the smallest       
+      number of technical profiles and user journeys needed to achieve the scenarios described: 
+      - LocalAccounts - Enables the use of local accounts only. 
+      - SocialAccounts - Enables the use of social (or federated) accounts only. 
+      - SocialAndLocalAccounts - Enables the use of both local and social accounts. Most of our samples refer to this policy. 
+      - SocialAndLocalAccountsWithMFA - Enables social, local, and multi-factor authentication options. 
+
+
