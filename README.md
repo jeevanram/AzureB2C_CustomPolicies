@@ -125,4 +125,5 @@ Setup Process
       - SocialAndLocalAccounts - Enables the use of both local and social accounts. Most of our samples refer to this policy. 
       - SocialAndLocalAccountsWithMFA - Enables social, local, and multi-factor authentication options. 
 
-
+    - Refer to https://github.com/jeevanram/AzureB2C_UserMigration/tree/main/CustomPolicies for Custom policies(XMLs) used in Seamless user migration with legacy
+      identity provider rest API 
