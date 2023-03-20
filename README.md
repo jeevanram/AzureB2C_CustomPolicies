@@ -7,6 +7,7 @@ References
 3. https://learn.microsoft.com/en-us/azure/active-directory-b2c/tutorial-create-user-flows?pivots=b2c-custom-policy
 4. https://github.com/Azure-Samples/active-directory-b2c-custom-policy-starterpack
 5. https://github.com/azure-ad-b2c/user-migration/tree/master/seamless-account-migration
+6. https://learn.microsoft.com/en-us/azure/active-directory-b2c/restful-technical-profile
 
  
 Stages of User Migration
