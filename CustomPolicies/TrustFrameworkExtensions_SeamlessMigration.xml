@@ -112,6 +112,7 @@
 					<DisplayName>REST API call to communicate with Legacy IdP</DisplayName>
 					<Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
 					<Metadata>
+						<!-- Replace the ServiceUrl placeholder with your legacy identity provider URL -->
 						<Item Key="ServiceUrl"><<LEGACY_API_URL_FOR_AUTHENTICATION>></Item>
 						<Item Key="AuthenticationType">None</Item>
 						<Item Key="SendClaimsIn">Body</Item>
