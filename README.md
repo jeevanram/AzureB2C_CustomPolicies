@@ -8,6 +8,7 @@ References
 4. https://github.com/Azure-Samples/active-directory-b2c-custom-policy-starterpack
 5. https://github.com/azure-ad-b2c/user-migration/tree/master/seamless-account-migration
 6. https://learn.microsoft.com/en-us/azure/active-directory-b2c/restful-technical-profile
+7. https://learn.microsoft.com/en-us/azure/active-directory/develop/v2-oauth-ropc
 
  
 Stages of User Migration
