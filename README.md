@@ -130,13 +130,14 @@ Setup Process
     - Refer to https://github.com/jeevanram/AzureB2C_UserMigration/tree/main/CustomPolicies for Custom policies(XMLs) used in Seamless user migration with legacy
       identity provider rest API 
     - On TrustFrameworkExtensions_SeamlessMigration.xml, define the legacy identity provider API endpoint.
-    - Make sure the authentication is NOT set to "None"
+    - Make sure the AuthenticationType is NOT set to "None"
+    - AuthenticationType can be Basic, API key based, OAuth Token but not "None"
       ```diff
       <TechnicalProfile Id="REST-API-SignUp">
        <DisplayName>Validate user's input data and return loyaltyNumber claim</DisplayName>
        <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
        <Metadata>
-         <Item Key="ServiceUrl">https://your-app-name.azurewebsites.NET/api/identity/signup</Item>
+         <Item Key="ServiceUrl">https://your-app-host/api/identity/signup</Item>
          <Item Key="AuthenticationType">ApiKeyHeader</Item>
          <Item Key="SendClaimsIn">Body</Item>
        </Metadata>
