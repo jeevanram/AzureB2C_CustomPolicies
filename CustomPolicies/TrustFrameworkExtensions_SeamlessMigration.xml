@@ -193,6 +193,8 @@
 					</InputClaims>
 					<PersistedClaims>
 						<PersistedClaim ClaimTypeReferenceId="objectId" />
+						<PersistedClaim ClaimTypeReferenceId="userPrincipalName" />
+						<PersistedClaim ClaimTypeReferenceId="displayName" />
 						<PersistedClaim ClaimTypeReferenceId="migrationRequired" PartnerClaimType="extension_requiresMigration" DefaultValue="false" AlwaysUseDefaultValue="true"/>
 					</PersistedClaims>
 					<IncludeTechnicalProfile ReferenceId="AAD-Common" />
