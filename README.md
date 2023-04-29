@@ -10,6 +10,7 @@ AzureB2C - https://learn.microsoft.com/en-us/azure/active-directory-b2c/overview
 5. https://github.com/azure-ad-b2c/user-migration/tree/master/seamless-account-migration
 6. https://learn.microsoft.com/en-us/azure/active-directory-b2c/restful-technical-profile
 7. https://learn.microsoft.com/en-us/azure/active-directory-b2c/secure-rest-api
+8. https://learn.microsoft.com/en-us/azure/active-directory-b2c/customize-ui-with-html?pivots=b2c-custom-policy
 
  
 Stages of User Migration
