@@ -6,7 +6,7 @@ AzureB2C - https://learn.microsoft.com/en-us/azure/active-directory-b2c/overview
 1. https://learn.microsoft.com/en-us/azure/active-directory-b2c/user-migration
 2. https://learn.microsoft.com/en-us/azure/active-directory-b2c/custom-policy-overview
 3. https://learn.microsoft.com/en-us/azure/active-directory-b2c/tutorial-create-user-flows?pivots=b2c-custom-policy
-4. https://github.com/Azure-Samples/active-directory-b2c-custom-policy-starterpack
+4. https://github.com/Azure-Samples/active-directory-b2c-custom-policy-starterpack, https://github.com/azure-ad-b2c/samples
 5. https://github.com/azure-ad-b2c/user-migration/tree/master/seamless-account-migration
 6. https://learn.microsoft.com/en-us/azure/active-directory-b2c/restful-technical-profile
 7. https://learn.microsoft.com/en-us/azure/active-directory-b2c/secure-rest-api
