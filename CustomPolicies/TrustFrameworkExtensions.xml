@@ -13,7 +13,16 @@
     <PolicyId>B2C_1A_TrustFrameworkLocalization</PolicyId>
   </BasePolicy>
   <BuildingBlocks>
-
+	  <ContentDefinitions>
+	    <ContentDefinition Id="api.signuporsignin">
+	      <LoadUri>https://your-template-domain/template_signin.html</LoadUri>
+	      <RecoveryUri>~/common/default_page_error.html</RecoveryUri>
+	      <DataUri>urn:com:microsoft:aad:b2c:elements:unifiedssp:1.0.0</DataUri>
+	      <Metadata>
+		<Item Key="DisplayName">Signin and Signup</Item>
+	      </Metadata>
+	    </ContentDefinition>
+	  </ContentDefinitions>
   </BuildingBlocks>
 
   <ClaimsProviders>
