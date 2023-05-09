@@ -13,7 +13,7 @@
     <PolicyId>B2C_1A_TrustFrameworkLocalization</PolicyId>
   </BasePolicy>
   <BuildingBlocks>
-	  <!-- Option to apply custom theme to the SSO page of AzureB2C -->
+	  <!-- Option to apply custom theme to the SSO login page using AzureB2C -->
 	  <ContentDefinitions>
 	    <ContentDefinition Id="api.signuporsignin">
 	      <LoadUri>https://your-template-domain/template_signin.html</LoadUri>
