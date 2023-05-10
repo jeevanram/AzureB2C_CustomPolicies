@@ -11,6 +11,7 @@ AzureB2C - https://learn.microsoft.com/en-us/azure/active-directory-b2c/overview
 6. https://learn.microsoft.com/en-us/azure/active-directory-b2c/restful-technical-profile
 7. https://learn.microsoft.com/en-us/azure/active-directory-b2c/secure-rest-api
 8. https://learn.microsoft.com/en-us/azure/active-directory-b2c/customize-ui-with-html?pivots=b2c-custom-policy
+9. https://www.linkedin.com/pulse/using-azure-ad-b2c-identity-provider-salesforce-conor-langan/ - Exposing custom UserInfo endpoint
 
  
 Stages of User Migration
