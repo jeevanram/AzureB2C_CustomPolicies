@@ -112,12 +112,12 @@
 		  <Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
 		</CryptographicKeys>
 		<OutputClaims>
-		  <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub"/>
-		  <OutputClaim ClaimTypeReferenceId="signInNames.emailAddress" PartnerClaimType="email"/>
-		  <!-- Optional claims to read from the access token. -->
-		  <!-- <OutputClaim ClaimTypeReferenceId="givenName" PartnerClaimType="given_name"/>
-		     <OutputClaim ClaimTypeReferenceId="surname" PartnerClaimType="family_name"/>
-		     <OutputClaim ClaimTypeReferenceId="displayName" PartnerClaimType="name"/> -->
+		    <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub" />
+		    <OutputClaim ClaimTypeReferenceId="signInNames.emailAddress" PartnerClaimType="email" />
+		    <OutputClaim ClaimTypeReferenceId="givenName" PartnerClaimType="given_name" />
+		    <OutputClaim ClaimTypeReferenceId="givenName" PartnerClaimType="firstName" />
+		    <OutputClaim ClaimTypeReferenceId="surname" PartnerClaimType="family_name" />
+		    <OutputClaim ClaimTypeReferenceId="displayName" PartnerClaimType="name" />
 		</OutputClaims>
 	      </TechnicalProfile>
 	    </TechnicalProfiles>
