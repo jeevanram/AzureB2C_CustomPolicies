@@ -115,10 +115,13 @@
 						<!-- Replace the ServiceUrl placeholder with your legacy identity provider URL -->
 						<Item Key="ServiceUrl"><<LEGACY_API_URL_FOR_AUTHENTICATION>></Item>
 						<!-- To avoid DOS attack and security issues, set AuthenticationType and throttle requests to the API -->
-						<Item Key="AuthenticationType">None</Item>
+						<Item Key="AuthenticationType">ApiKeyHeader</Item>
 						<Item Key="SendClaimsIn">Body</Item>
-						<Item Key="AllowInsecureAuthInProduction">True</Item>
+						<Item Key="AllowInsecureAuthInProduction">false</Item>
 					</Metadata>
+					<CryptographicKeys>
+        					<Key Id="x-functions-key" StorageReferenceId="B2C_1A_RestApiKey" />
+      					</CryptographicKeys>
 					<InputClaims>
 						<InputClaim ClaimTypeReferenceId="signInName" PartnerClaimType="email" />
 						<InputClaim ClaimTypeReferenceId="password" />
