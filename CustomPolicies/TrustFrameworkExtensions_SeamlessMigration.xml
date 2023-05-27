@@ -120,6 +120,7 @@
 						<Item Key="AllowInsecureAuthInProduction">false</Item>
 					</Metadata>
 					<CryptographicKeys>
+						<!-- x-functions-key is the Header Key for custom key-based authentication -->
         					<Key Id="x-functions-key" StorageReferenceId="B2C_1A_RestApiKey" />
       					</CryptographicKeys>
 					<InputClaims>
