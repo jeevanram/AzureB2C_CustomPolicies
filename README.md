@@ -11,6 +11,7 @@ AzureB2C - https://learn.microsoft.com/en-us/azure/active-directory-b2c/overview
 7. https://learn.microsoft.com/en-us/azure/active-directory-b2c/secure-rest-api
 8. https://learn.microsoft.com/en-us/azure/active-directory-b2c/customize-ui-with-html?pivots=b2c-custom-policy
 9. https://learn.microsoft.com/en-us/azure/active-directory-b2c/userinfo-endpoint?pivots=b2c-custom-policy
+10. https://github.com/azure-ad-b2c/samples/tree/master/policies/signin-email-verification
 
  
 Stages of User Migration
