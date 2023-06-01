@@ -1,375 +1,352 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<TrustFrameworkPolicy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-	xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" PolicySchemaVersion="0.3.0.0" TenantId="yourtenant.onmicrosoft.com" PolicyId="B2C_1A_TrustFrameworkExtensions_SeamlessMigration" PublicPolicyUri="http://yourtenant.onmicrosoft.com/B2C_1A_TrustFrameworkExtensions_SeamlessMigration">
-
-	<BasePolicy>
-		<TenantId>yourtenant.onmicrosoft.com</TenantId>
-		<PolicyId>B2C_1A_TrustFrameworkExtensions</PolicyId>
-	</BasePolicy>
-	<BuildingBlocks>
-		<ClaimsSchema>
-			<ClaimType Id="requiresMigration">
-				<DisplayName>extension_requiresMigration</DisplayName>
-				<DataType>boolean</DataType>
-				<AdminHelpText>extension_requiresMigration</AdminHelpText>
-				<UserHelpText>extension_requiresMigration</UserHelpText>
-			</ClaimType>
-			<ClaimType Id="extension_requiresMigration">
-				<DisplayName>extension_requiresMigration</DisplayName>
-				<DataType>boolean</DataType>
-				<AdminHelpText>extension_requiresMigration</AdminHelpText>
-				<UserHelpText>extension_requiresMigration</UserHelpText>
-			</ClaimType>
-			<ClaimType Id="tokenSuccess">
-				<DisplayName>tokenSuccess</DisplayName>
-				<DataType>boolean</DataType>
-				<AdminHelpText>tokenSuccess</AdminHelpText>
-				<UserHelpText>tokenSuccess</UserHelpText>
-			</ClaimType>
-			<ClaimType Id="migrationRequired">
-				<DisplayName>migrationRequired</DisplayName>
-				<DataType>boolean</DataType>
-				<AdminHelpText>migrationRequired</AdminHelpText>
-				<UserHelpText>migrationRequired</UserHelpText>
-			</ClaimType>
-			<ClaimType Id="isForgotPassword">
-			  <DisplayName>isForgotPassword</DisplayName>
-			  <DataType>boolean</DataType>
-			  <AdminHelpText>Whether the user has selected Forgot your Password</AdminHelpText>
-			</ClaimType>
-			<!--Added for email verification-->
-		        <ClaimType Id="readOnlyEmail">
-			  <DisplayName>Email Address</DisplayName>
-			  <DataType>string</DataType>
-			  <UserHelpText />
-			  <UserInputType>Readonly</UserInputType>
-		        </ClaimType>
-		</ClaimsSchema>
-		<!--Added for email verification-->
-	    <ClaimsTransformations>
-	      <ClaimsTransformation Id="CopySignInNameToReadOnly" TransformationMethod="FormatStringClaim">
-		<InputClaims>
-		  <InputClaim ClaimTypeReferenceId="signInName" TransformationClaimType="inputClaim" />
-		</InputClaims>
-		<InputParameters>
-		  <InputParameter Id="stringFormat" DataType="string" Value="{0}" />
-		</InputParameters>
-		<OutputClaims>
-		  <OutputClaim ClaimTypeReferenceId="readOnlyEmail" TransformationClaimType="outputClaim" />
-		</OutputClaims>
-	      </ClaimsTransformation>
-	    </ClaimsTransformations>
-	
-	</BuildingBlocks>
-
-	<ClaimsProviders>
-		<ClaimsProvider>
-			<DisplayName>Local Account SignIn</DisplayName>
-			<TechnicalProfiles>
-
-				<TechnicalProfile Id="SelfAsserted-LocalAccountSignin-Email">
-					<ValidationTechnicalProfiles>
-						<!--Add user migration validation technical profiles before login-NonInteractive -->
-						
-
-						<!-- Populate extension_requireMigration into the claims pipeline -->
-						<ValidationTechnicalProfile ReferenceId="Get-requiresMigration-status-signin" ContinueOnError="false" />
-
-						<!-- If extension_requireMigration is true, call the legacy IdP via the REST API -->
-						<ValidationTechnicalProfile ReferenceId="UserMigrationViaLegacyIdp" ContinueOnError="false">
-							<Preconditions>
-								<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-									<Value>requiresMigration</Value>
-									<Value>False</Value>
-									<Action>SkipThisValidationTechnicalProfile</Action>
-								</Precondition>
-							</Preconditions>
-						</ValidationTechnicalProfile>
-
-						<!-- If the API returned 'tokensuccess', write the new password and unmark the account for migration -->
-						<ValidationTechnicalProfile ReferenceId="AAD-WritePasswordAndFlipMigratedFlag" ContinueOnError="false">
-							<Preconditions>
-								<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-									<Value>tokenSuccess</Value>
-									<Action>SkipThisValidationTechnicalProfile</Action>
-								</Precondition>
-							</Preconditions>
-						</ValidationTechnicalProfile>
-
-						<!-- Initiate a normal logon against Azure AD B2C -->
-						<ValidationTechnicalProfile ReferenceId="login-NonInteractive" />
-					</ValidationTechnicalProfiles>
-				</TechnicalProfile>
-			</TechnicalProfiles>
-		</ClaimsProvider>
-
-		<ClaimsProvider>
-			<DisplayName>Local Account SignIn - Read migration status</DisplayName>
-			<TechnicalProfiles>
-				<TechnicalProfile Id="Get-requiresMigration-status-signin">
-					<Metadata>
-						<Item Key="Operation">Read</Item>
-						<Item Key="RaiseErrorIfClaimsPrincipalDoesNotExist">true</Item>
-						<Item Key="UserMessageIfClaimsPrincipalDoesNotExist">An account could not be found for the provided user ID.</Item>
-					</Metadata>
-					<IncludeInSso>false</IncludeInSso>
-					<InputClaims>
-						<InputClaim ClaimTypeReferenceId="signInName" PartnerClaimType="signInNames.emailAddress" Required="true" />
-					</InputClaims>
-					<OutputClaims>
-						<OutputClaim ClaimTypeReferenceId="objectId" />
-						<!-- Set a default value (false) in the case the account does not have this attribute defined -->
-						<OutputClaim ClaimTypeReferenceId="requiresMigration" PartnerClaimType="extension_requiresMigration" DefaultValue="false" />
-					</OutputClaims>
-					<IncludeTechnicalProfile ReferenceId="AAD-Common" />
-				</TechnicalProfile>
-			</TechnicalProfiles>
-		</ClaimsProvider>
-
-		<ClaimsProvider>
-			<DisplayName>REST API to communicate with Legacy IdP</DisplayName>
-			<TechnicalProfiles>
-				<TechnicalProfile Id="UserMigrationViaLegacyIdp">
-					<DisplayName>REST API call to communicate with Legacy IdP</DisplayName>
-					<Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
-					<Metadata>
-						<!-- Replace the ServiceUrl placeholder with your legacy identity provider URL -->
-						<Item Key="ServiceUrl"><<LEGACY_API_URL_FOR_AUTHENTICATION>></Item>
-						<!-- To avoid DOS attack and security issues, set AuthenticationType and throttle requests to the API -->
-						<Item Key="AuthenticationType">ApiKeyHeader</Item>
-						<Item Key="SendClaimsIn">Body</Item>
-						<Item Key="AllowInsecureAuthInProduction">false</Item>
-					</Metadata>
-					<CryptographicKeys>
-						<!-- x-functions-key is the Header Key for custom key-based authentication -->
-        					<Key Id="x-functions-key" StorageReferenceId="B2C_1A_RestApiKey" />
-      					</CryptographicKeys>
-					<InputClaims>
-						<InputClaim ClaimTypeReferenceId="signInName" PartnerClaimType="email" />
-						<InputClaim ClaimTypeReferenceId="password" />
-					</InputClaims>
-					<OutputClaims>
-						<OutputClaim ClaimTypeReferenceId="tokenSuccess" DefaultValue="false"/>
-						<OutputClaim ClaimTypeReferenceId="migrationRequired"/>
-					</OutputClaims>
-					<UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
-				</TechnicalProfile>
-			</TechnicalProfiles>
-		</ClaimsProvider>
-		<ClaimsProvider>
-		      <DisplayName>Validate Email on Sign In</DisplayName>
-		      <TechnicalProfiles>
-				 <TechnicalProfile Id="AAD-UserReadUsingObjectId">
-			  <OutputClaims>
-			    <OutputClaim ClaimTypeReferenceId="extension_requiresMigration" />
-			  </OutputClaims>
-			</TechnicalProfile>
-				<TechnicalProfile Id="AAD-UserRemoveMustResetPasswordUsingObjectId">
-			  <Metadata>
-			    <Item Key="Operation">DeleteClaims</Item>
-			  </Metadata>
-			  <InputClaims>
-			    <InputClaim ClaimTypeReferenceId="objectId" Required="true" />
-			  </InputClaims>
-			  <PersistedClaims>
-			    <PersistedClaim ClaimTypeReferenceId="objectId" />
-			    <PersistedClaim ClaimTypeReferenceId="extension_requiresMigration" />
-			  </PersistedClaims>
-			  <IncludeTechnicalProfile ReferenceId="AAD-Common" />
-			</TechnicalProfile>
-			<TechnicalProfile Id="SM-AAD">
-			  <PersistedClaims>
-			    <PersistedClaim ClaimTypeReferenceId="readOnlyEmail" />
-			  </PersistedClaims>
-			</TechnicalProfile>
-			<TechnicalProfile Id="EmailVerifyOnSignIn">
-			  <DisplayName>EmailVerifyOnSignIn</DisplayName>
-			  <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
-			  <Metadata>
-			    <Item Key="ContentDefinitionReferenceId">api.selfasserted</Item>
-			  </Metadata>
-			  <InputClaims>
-			    <InputClaim ClaimTypeReferenceId="readOnlyEmail" />
-			  </InputClaims>
-			  <OutputClaims>
-			    <OutputClaim ClaimTypeReferenceId="readOnlyEmail" PartnerClaimType="Verified.Email" Required="true" />
-			  </OutputClaims>
-			  <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
-			</TechnicalProfile>
-		      </TechnicalProfiles>
-		</ClaimsProvider>
-		<ClaimsProvider>
-			<DisplayName>Local Account SignIn - Write new password and unmark for migration</DisplayName>
-			<TechnicalProfiles>
-				<TechnicalProfile Id="AAD-WritePasswordAndFlipMigratedFlag">
-					<Metadata>
-						<Item Key="Operation">Write</Item>
-						<Item Key="RaiseErrorIfClaimsPrincipalAlreadyExists">false</Item>
-					</Metadata>
-					<IncludeInSso>false</IncludeInSso>
-					<InputClaims>
-						<InputClaim ClaimTypeReferenceId="objectId" Required="true" />
-					</InputClaims>
-					<PersistedClaims>
-						<PersistedClaim ClaimTypeReferenceId="objectId" />
-						<PersistedClaim ClaimTypeReferenceId="userPrincipalName" />
-						<PersistedClaim ClaimTypeReferenceId="displayName" />
-						<PersistedClaim ClaimTypeReferenceId="password" PartnerClaimType="password"/>
-						<PersistedClaim ClaimTypeReferenceId="passwordPolicies" DefaultValue="DisablePasswordExpiration, DisableStrongPassword" AlwaysUseDefaultValue="true"/>
-						<PersistedClaim ClaimTypeReferenceId="extension_requiresMigration" DefaultValue="false" AlwaysUseDefaultValue="true"/>
-					</PersistedClaims>
-					<IncludeTechnicalProfile ReferenceId="AAD-Common" />
-					<UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
-				</TechnicalProfile>
-			</TechnicalProfiles>
-		</ClaimsProvider>
-
-		<ClaimsProvider>
-			<DisplayName>Local Account Password Reset - Read migration flag</DisplayName>
-			<TechnicalProfiles>
-				<TechnicalProfile Id="Get-requiresMigration-status-password-reset">
-					<Metadata>
-						<Item Key="Operation">Read</Item>
-						<Item Key="RaiseErrorIfClaimsPrincipalDoesNotExist">true</Item>
-						<Item Key="UserMessageIfClaimsPrincipalDoesNotExist">An account could not be found for the provided user ID.</Item>
-					</Metadata>
-					<IncludeInSso>false</IncludeInSso>
-					<InputClaims>
-						<InputClaim ClaimTypeReferenceId="objectId" Required="true" />
-					</InputClaims>
-					<OutputClaims>
-						<OutputClaim ClaimTypeReferenceId="requiresMigration" PartnerClaimType="extension_requiresMigration" DefaultValue="false" />
-					</OutputClaims>
-					<IncludeTechnicalProfile ReferenceId="AAD-Common" />
-				</TechnicalProfile>
-			</TechnicalProfiles>
-		</ClaimsProvider>
-
-		<ClaimsProvider>
-			<DisplayName>Local Account Password Reset - Flip migration flag</DisplayName>
-			<TechnicalProfiles>
-				<TechnicalProfile Id="AAD-FlipMigratedFlag">
-					<Metadata>
-						<Item Key="Operation">Write</Item>
-						<Item Key="RaiseErrorIfClaimsPrincipalAlreadyExists">false</Item>
-					</Metadata>
-					<IncludeInSso>false</IncludeInSso>
-					<InputClaims>
-						<InputClaim ClaimTypeReferenceId="objectId" Required="true" />
-					</InputClaims>
-					<PersistedClaims>
-						<PersistedClaim ClaimTypeReferenceId="objectId" />
-						<PersistedClaim ClaimTypeReferenceId="userPrincipalName" />
-						<PersistedClaim ClaimTypeReferenceId="displayName" />
-						<PersistedClaim ClaimTypeReferenceId="migrationRequired" PartnerClaimType="extension_requiresMigration" DefaultValue="false" AlwaysUseDefaultValue="true"/>
-					</PersistedClaims>
-					<IncludeTechnicalProfile ReferenceId="AAD-Common" />
-					<UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
-				</TechnicalProfile>
-			</TechnicalProfiles>
-		</ClaimsProvider>
-
-		<ClaimsProvider>
-			<DisplayName>Local Account Password Reset - Write Password</DisplayName>
-			<TechnicalProfiles>
-				<TechnicalProfile Id="LocalAccountWritePasswordUsingObjectId">
-					<ValidationTechnicalProfiles>
-						<ValidationTechnicalProfile ReferenceId="Get-requiresMigration-status-password-reset" ContinueOnError="false" />
-						<ValidationTechnicalProfile ReferenceId="AAD-FlipMigratedFlag" ContinueOnError="false">
-							<Preconditions>
-								<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-									<Value>requiresMigration</Value>
-									<Value>False</Value>
-									<Action>SkipThisValidationTechnicalProfile</Action>
-								</Precondition>
-							</Preconditions>
-						</ValidationTechnicalProfile>
-						<ValidationTechnicalProfile ReferenceId="AAD-UserWritePasswordUsingObjectId" />
-					</ValidationTechnicalProfiles>
-				</TechnicalProfile>
-			</TechnicalProfiles>
-		</ClaimsProvider>
-	</ClaimsProviders>
-	<UserJourneys>
-	    <UserJourney Id="SignUpOrSignInWithEmailVerificationOnSignIn">
-	      <OrchestrationSteps>
-		<OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
-		  <ClaimsProviderSelections>
-		    <ClaimsProviderSelection ValidationClaimsExchangeId="LocalAccountSigninEmailExchange" />
-		  </ClaimsProviderSelections>
-		  <ClaimsExchanges>
-		    <ClaimsExchange Id="LocalAccountSigninEmailExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Email" />
-		  </ClaimsExchanges>
-		</OrchestrationStep>
-
-		<OrchestrationStep Order="2" Type="ClaimsExchange">
-		  <Preconditions>
-		    <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
-		      <Value>objectId</Value>
-		      <Action>SkipThisOrchestrationStep</Action>
-		    </Precondition>
-		  </Preconditions>
-		  <ClaimsExchanges>
-		    <ClaimsExchange Id="SignUpWithLogonEmailExchange" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonEmail" />
-		  </ClaimsExchanges>
-		</OrchestrationStep>
-
-		<!-- This step reads any user attributes that we may not have received when in the token. -->
-		<OrchestrationStep Order="3" Type="ClaimsExchange">
-		  <ClaimsExchanges>
-		    <ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
-		  </ClaimsExchanges>
-		</OrchestrationStep>
-
-			<!-- This step forces email verification on sign in only. -->
-		<OrchestrationStep Order="4" Type="ClaimsExchange">
-		  <Preconditions>
-		    <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-		      <Value>extension_requiresMigration</Value>
-		      <Action>SkipThisOrchestrationStep</Action>
-		    </Precondition>
-		  </Preconditions>
-		  <ClaimsExchanges>
-		    <ClaimsExchange Id="EmailVerifyOnSignIn" TechnicalProfileReferenceId="EmailVerifyOnSignIn" />
-		  </ClaimsExchanges>
-		</OrchestrationStep>
-
-			<OrchestrationStep Order="5" Type="ClaimsExchange">
-		  <Preconditions>
-		    <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-		      <Value>extension_requiresMigration</Value>
-		      <Action>SkipThisOrchestrationStep</Action>
-		    </Precondition>
-		  </Preconditions>
-		  <ClaimsExchanges>
-		    <ClaimsExchange Id="AADUserRemoveMustResetPasswordUsingObjectId" TechnicalProfileReferenceId="AAD-UserRemoveMustResetPasswordUsingObjectId" />
-		  </ClaimsExchanges>
-		</OrchestrationStep>
-
-		<OrchestrationStep Order="6" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
-
-
-	      </OrchestrationSteps>
-	      <ClientDefinition ReferenceId="DefaultWeb" />
-	    </UserJourney>
-	  </UserJourneys>
-	  <SubJourneys>	
-	  <SubJourney Id="PasswordReset" Type="Call">	
-		<OrchestrationSteps>	
-		  <!-- Validate user's email address. -->	
-		  <OrchestrationStep Order="1" Type="ClaimsExchange">	
-			<ClaimsExchanges>	
-			  <ClaimsExchange Id="PasswordResetUsingEmailAddressExchange" TechnicalProfileReferenceId="LocalAccountDiscoveryUsingEmailAddress" />	
-			</ClaimsExchanges>	
-		  </OrchestrationStep>	
-		  <!-- Collect and persist a new password. -->	
-		  <OrchestrationStep Order="2" Type="ClaimsExchange">	
-			<ClaimsExchanges>	
-			  <ClaimsExchange Id="NewCredentials" TechnicalProfileReferenceId="LocalAccountWritePasswordUsingObjectId" />	
-			</ClaimsExchanges>	
-		  </OrchestrationStep>	
-		</OrchestrationSteps>	
-	  </SubJourney>	
-  </SubJourneys>
+<?xml version="1.0" encoding="UTF-8"?>
+<TrustFrameworkPolicy xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" PolicySchemaVersion="0.3.0.0" TenantId="yourtenant.onmicrosoft.com" PolicyId="B2C_1A_TrustFrameworkExtensions_SeamlessMigration" PublicPolicyUri="http://yourtenant.onmicrosoft.com/B2C_1A_TrustFrameworkExtensions_SeamlessMigration">
+   <BasePolicy>
+      <TenantId>yourtenant.onmicrosoft.com</TenantId>
+      <PolicyId>B2C_1A_TrustFrameworkExtensions</PolicyId>
+   </BasePolicy>
+   <BuildingBlocks>
+      <ClaimsSchema>
+         <ClaimType Id="requiresMigration">
+            <DisplayName>extension_requiresMigration</DisplayName>
+            <DataType>boolean</DataType>
+            <AdminHelpText>extension_requiresMigration</AdminHelpText>
+            <UserHelpText>extension_requiresMigration</UserHelpText>
+         </ClaimType>
+         <ClaimType Id="extension_requiresMigration">
+            <DisplayName>extension_requiresMigration</DisplayName>
+            <DataType>boolean</DataType>
+            <AdminHelpText>extension_requiresMigration</AdminHelpText>
+            <UserHelpText>extension_requiresMigration</UserHelpText>
+         </ClaimType>
+         <ClaimType Id="tokenSuccess">
+            <DisplayName>tokenSuccess</DisplayName>
+            <DataType>boolean</DataType>
+            <AdminHelpText>tokenSuccess</AdminHelpText>
+            <UserHelpText>tokenSuccess</UserHelpText>
+         </ClaimType>
+         <ClaimType Id="migrationRequired">
+            <DisplayName>migrationRequired</DisplayName>
+            <DataType>boolean</DataType>
+            <AdminHelpText>migrationRequired</AdminHelpText>
+            <UserHelpText>migrationRequired</UserHelpText>
+         </ClaimType>
+         <ClaimType Id="isForgotPassword">
+            <DisplayName>isForgotPassword</DisplayName>
+            <DataType>boolean</DataType>
+            <AdminHelpText>Whether the user has selected Forgot your Password</AdminHelpText>
+         </ClaimType>
+         <!--Added for email verification-->
+         <ClaimType Id="readOnlyEmail">
+            <DisplayName>Email Address</DisplayName>
+            <DataType>string</DataType>
+            <UserHelpText />
+            <UserInputType>Readonly</UserInputType>
+         </ClaimType>
+      </ClaimsSchema>
+      <!--Added for email verification-->
+      <ClaimsTransformations>
+         <ClaimsTransformation Id="CopySignInNameToReadOnly" TransformationMethod="FormatStringClaim">
+            <InputClaims>
+               <InputClaim ClaimTypeReferenceId="signInName" TransformationClaimType="inputClaim" />
+            </InputClaims>
+            <InputParameters>
+               <InputParameter Id="stringFormat" DataType="string" Value="{0}" />
+            </InputParameters>
+            <OutputClaims>
+               <OutputClaim ClaimTypeReferenceId="readOnlyEmail" TransformationClaimType="outputClaim" />
+            </OutputClaims>
+         </ClaimsTransformation>
+      </ClaimsTransformations>
+   </BuildingBlocks>
+   <ClaimsProviders>
+      <ClaimsProvider>
+         <DisplayName>Local Account SignIn</DisplayName>
+         <TechnicalProfiles>
+            <TechnicalProfile Id="SelfAsserted-LocalAccountSignin-Email">
+               <ValidationTechnicalProfiles>
+                  <!--Add user migration validation technical profiles before login-NonInteractive -->
+                  <!-- Populate extension_requireMigration into the claims pipeline -->
+                  <ValidationTechnicalProfile ReferenceId="Get-requiresMigration-status-signin" ContinueOnError="false" />
+                  <!-- If extension_requireMigration is true, call the legacy IdP via the REST API -->
+                  <ValidationTechnicalProfile ReferenceId="UserMigrationViaLegacyIdp" ContinueOnError="false">
+                     <Preconditions>
+                        <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+                           <Value>requiresMigration</Value>
+                           <Value>False</Value>
+                           <Action>SkipThisValidationTechnicalProfile</Action>
+                        </Precondition>
+                     </Preconditions>
+                  </ValidationTechnicalProfile>
+                  <!-- If the API returned 'tokensuccess', write the new password and unmark the account for migration -->
+                  <ValidationTechnicalProfile ReferenceId="AAD-WritePasswordAndFlipMigratedFlag" ContinueOnError="false">
+                     <Preconditions>
+                        <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+                           <Value>tokenSuccess</Value>
+                           <Action>SkipThisValidationTechnicalProfile</Action>
+                        </Precondition>
+                     </Preconditions>
+                  </ValidationTechnicalProfile>
+                  <!-- Initiate a normal logon against Azure AD B2C -->
+                  <ValidationTechnicalProfile ReferenceId="login-NonInteractive" />
+               </ValidationTechnicalProfiles>
+            </TechnicalProfile>
+         </TechnicalProfiles>
+      </ClaimsProvider>
+      <ClaimsProvider>
+         <DisplayName>Local Account SignIn - Read migration status</DisplayName>
+         <TechnicalProfiles>
+            <TechnicalProfile Id="Get-requiresMigration-status-signin">
+               <Metadata>
+                  <Item Key="Operation">Read</Item>
+                  <Item Key="RaiseErrorIfClaimsPrincipalDoesNotExist">true</Item>
+                  <Item Key="UserMessageIfClaimsPrincipalDoesNotExist">An account could not be found for the provided user ID.</Item>
+               </Metadata>
+               <IncludeInSso>false</IncludeInSso>
+               <InputClaims>
+                  <InputClaim ClaimTypeReferenceId="signInName" PartnerClaimType="signInNames.emailAddress" Required="true" />
+               </InputClaims>
+               <OutputClaims>
+                  <OutputClaim ClaimTypeReferenceId="objectId" />
+                  <!-- Set a default value (false) in the case the account does not have this attribute defined -->
+                  <OutputClaim ClaimTypeReferenceId="requiresMigration" PartnerClaimType="extension_requiresMigration" DefaultValue="false" />
+               </OutputClaims>
+               <IncludeTechnicalProfile ReferenceId="AAD-Common" />
+            </TechnicalProfile>
+         </TechnicalProfiles>
+      </ClaimsProvider>
+      <ClaimsProvider>
+         <DisplayName>REST API to communicate with Legacy IdP</DisplayName>
+         <TechnicalProfiles>
+            <TechnicalProfile Id="UserMigrationViaLegacyIdp">
+               <DisplayName>REST API call to communicate with Legacy IdP</DisplayName>
+               <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+               <Metadata>
+                  <!-- Replace the ServiceUrl placeholder with your legacy identity provider URL -->
+                  <Item Key="ServiceUrl">LEGACY_API_URL_FOR_AUTHENTICATION</Item>
+                  <!-- To avoid DOS attack and security issues, set AuthenticationType and throttle requests to the API -->
+                  <Item Key="AuthenticationType">ApiKeyHeader</Item>
+                  <Item Key="SendClaimsIn">Body</Item>
+                  <Item Key="AllowInsecureAuthInProduction">false</Item>
+               </Metadata>
+               <CryptographicKeys>
+                  <!-- x-functions-key is the Header Key for custom key-based authentication -->
+                  <Key Id="x-functions-key" StorageReferenceId="B2C_1A_RestApiKey" />
+               </CryptographicKeys>
+               <InputClaims>
+                  <InputClaim ClaimTypeReferenceId="signInName" PartnerClaimType="email" />
+                  <InputClaim ClaimTypeReferenceId="password" />
+               </InputClaims>
+               <OutputClaims>
+                  <OutputClaim ClaimTypeReferenceId="tokenSuccess" DefaultValue="false" />
+                  <OutputClaim ClaimTypeReferenceId="migrationRequired" />
+               </OutputClaims>
+               <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+            </TechnicalProfile>
+         </TechnicalProfiles>
+      </ClaimsProvider>
+      <ClaimsProvider>
+         <DisplayName>Validate Email on Sign In</DisplayName>
+         <TechnicalProfiles>
+            <TechnicalProfile Id="AAD-UserReadUsingObjectId">
+               <OutputClaims>
+                  <OutputClaim ClaimTypeReferenceId="extension_requiresMigration" />
+               </OutputClaims>
+            </TechnicalProfile>
+            <TechnicalProfile Id="AAD-UserRemoveMustResetPasswordUsingObjectId">
+               <Metadata>
+                  <Item Key="Operation">DeleteClaims</Item>
+               </Metadata>
+               <InputClaims>
+                  <InputClaim ClaimTypeReferenceId="objectId" Required="true" />
+               </InputClaims>
+               <PersistedClaims>
+                  <PersistedClaim ClaimTypeReferenceId="objectId" />
+                  <PersistedClaim ClaimTypeReferenceId="extension_requiresMigration" />
+               </PersistedClaims>
+               <IncludeTechnicalProfile ReferenceId="AAD-Common" />
+            </TechnicalProfile>
+            <TechnicalProfile Id="SM-AAD">
+               <PersistedClaims>
+                  <PersistedClaim ClaimTypeReferenceId="readOnlyEmail" />
+               </PersistedClaims>
+            </TechnicalProfile>
+            <TechnicalProfile Id="EmailVerifyOnSignIn">
+               <DisplayName>EmailVerifyOnSignIn</DisplayName>
+               <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+               <Metadata>
+                  <Item Key="ContentDefinitionReferenceId">api.selfasserted</Item>
+               </Metadata>
+               <InputClaims>
+                  <InputClaim ClaimTypeReferenceId="readOnlyEmail" />
+               </InputClaims>
+               <OutputClaims>
+                  <OutputClaim ClaimTypeReferenceId="readOnlyEmail" PartnerClaimType="Verified.Email" Required="true" />
+               </OutputClaims>
+               <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
+            </TechnicalProfile>
+         </TechnicalProfiles>
+      </ClaimsProvider>
+      <ClaimsProvider>
+         <DisplayName>Local Account SignIn - Write new password and unmark for migration</DisplayName>
+         <TechnicalProfiles>
+            <TechnicalProfile Id="AAD-WritePasswordAndFlipMigratedFlag">
+               <Metadata>
+                  <Item Key="Operation">Write</Item>
+                  <Item Key="RaiseErrorIfClaimsPrincipalAlreadyExists">false</Item>
+               </Metadata>
+               <IncludeInSso>false</IncludeInSso>
+               <InputClaims>
+                  <InputClaim ClaimTypeReferenceId="objectId" Required="true" />
+               </InputClaims>
+               <PersistedClaims>
+                  <PersistedClaim ClaimTypeReferenceId="objectId" />
+                  <PersistedClaim ClaimTypeReferenceId="userPrincipalName" />
+                  <PersistedClaim ClaimTypeReferenceId="displayName" />
+                  <PersistedClaim ClaimTypeReferenceId="password" PartnerClaimType="password" />
+                  <PersistedClaim ClaimTypeReferenceId="passwordPolicies" DefaultValue="DisablePasswordExpiration, DisableStrongPassword" AlwaysUseDefaultValue="true" />
+                  <PersistedClaim ClaimTypeReferenceId="extension_requiresMigration" DefaultValue="false" AlwaysUseDefaultValue="true" />
+               </PersistedClaims>
+               <IncludeTechnicalProfile ReferenceId="AAD-Common" />
+               <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
+            </TechnicalProfile>
+         </TechnicalProfiles>
+      </ClaimsProvider>
+      <ClaimsProvider>
+         <DisplayName>Local Account Password Reset - Read migration flag</DisplayName>
+         <TechnicalProfiles>
+            <TechnicalProfile Id="Get-requiresMigration-status-password-reset">
+               <Metadata>
+                  <Item Key="Operation">Read</Item>
+                  <Item Key="RaiseErrorIfClaimsPrincipalDoesNotExist">true</Item>
+                  <Item Key="UserMessageIfClaimsPrincipalDoesNotExist">An account could not be found for the provided user ID.</Item>
+               </Metadata>
+               <IncludeInSso>false</IncludeInSso>
+               <InputClaims>
+                  <InputClaim ClaimTypeReferenceId="objectId" Required="true" />
+               </InputClaims>
+               <OutputClaims>
+                  <OutputClaim ClaimTypeReferenceId="requiresMigration" PartnerClaimType="extension_requiresMigration" DefaultValue="false" />
+               </OutputClaims>
+               <IncludeTechnicalProfile ReferenceId="AAD-Common" />
+            </TechnicalProfile>
+         </TechnicalProfiles>
+      </ClaimsProvider>
+      <ClaimsProvider>
+         <DisplayName>Local Account Password Reset - Flip migration flag</DisplayName>
+         <TechnicalProfiles>
+            <TechnicalProfile Id="AAD-FlipMigratedFlag">
+               <Metadata>
+                  <Item Key="Operation">Write</Item>
+                  <Item Key="RaiseErrorIfClaimsPrincipalAlreadyExists">false</Item>
+               </Metadata>
+               <IncludeInSso>false</IncludeInSso>
+               <InputClaims>
+                  <InputClaim ClaimTypeReferenceId="objectId" Required="true" />
+               </InputClaims>
+               <PersistedClaims>
+                  <PersistedClaim ClaimTypeReferenceId="objectId" />
+                  <PersistedClaim ClaimTypeReferenceId="userPrincipalName" />
+                  <PersistedClaim ClaimTypeReferenceId="displayName" />
+                  <PersistedClaim ClaimTypeReferenceId="migrationRequired" PartnerClaimType="extension_requiresMigration" DefaultValue="false" AlwaysUseDefaultValue="true" />
+               </PersistedClaims>
+               <IncludeTechnicalProfile ReferenceId="AAD-Common" />
+               <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
+            </TechnicalProfile>
+         </TechnicalProfiles>
+      </ClaimsProvider>
+      <ClaimsProvider>
+         <DisplayName>Local Account Password Reset - Write Password</DisplayName>
+         <TechnicalProfiles>
+            <TechnicalProfile Id="LocalAccountWritePasswordUsingObjectId">
+               <ValidationTechnicalProfiles>
+                  <ValidationTechnicalProfile ReferenceId="Get-requiresMigration-status-password-reset" ContinueOnError="false" />
+                  <ValidationTechnicalProfile ReferenceId="AAD-FlipMigratedFlag" ContinueOnError="false">
+                     <Preconditions>
+                        <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+                           <Value>requiresMigration</Value>
+                           <Value>False</Value>
+                           <Action>SkipThisValidationTechnicalProfile</Action>
+                        </Precondition>
+                     </Preconditions>
+                  </ValidationTechnicalProfile>
+                  <ValidationTechnicalProfile ReferenceId="AAD-UserWritePasswordUsingObjectId" />
+               </ValidationTechnicalProfiles>
+            </TechnicalProfile>
+         </TechnicalProfiles>
+      </ClaimsProvider>
+   </ClaimsProviders>
+   <UserJourneys>
+      <UserJourney Id="SignUpOrSignInWithEmailVerificationOnSignIn">
+         <OrchestrationSteps>
+            <OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
+               <ClaimsProviderSelections>
+                  <ClaimsProviderSelection ValidationClaimsExchangeId="LocalAccountSigninEmailExchange" />
+               </ClaimsProviderSelections>
+               <ClaimsExchanges>
+                  <ClaimsExchange Id="LocalAccountSigninEmailExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Email" />
+               </ClaimsExchanges>
+            </OrchestrationStep>
+            <OrchestrationStep Order="2" Type="ClaimsExchange">
+               <Preconditions>
+                  <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+                     <Value>objectId</Value>
+                     <Action>SkipThisOrchestrationStep</Action>
+                  </Precondition>
+               </Preconditions>
+               <ClaimsExchanges>
+                  <ClaimsExchange Id="SignUpWithLogonEmailExchange" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonEmail" />
+               </ClaimsExchanges>
+            </OrchestrationStep>
+            <!-- This step reads any user attributes that we may not have received when in the token. -->
+            <OrchestrationStep Order="3" Type="ClaimsExchange">
+               <ClaimsExchanges>
+                  <ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
+               </ClaimsExchanges>
+            </OrchestrationStep>
+            <!-- This step forces email verification on sign in only. -->
+            <OrchestrationStep Order="4" Type="ClaimsExchange">
+               <Preconditions>
+                  <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+                     <Value>extension_requiresMigration</Value>
+                     <Action>SkipThisOrchestrationStep</Action>
+                  </Precondition>
+               </Preconditions>
+               <ClaimsExchanges>
+                  <ClaimsExchange Id="EmailVerifyOnSignIn" TechnicalProfileReferenceId="EmailVerifyOnSignIn" />
+               </ClaimsExchanges>
+            </OrchestrationStep>
+            <OrchestrationStep Order="5" Type="ClaimsExchange">
+               <Preconditions>
+                  <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+                     <Value>extension_requiresMigration</Value>
+                     <Action>SkipThisOrchestrationStep</Action>
+                  </Precondition>
+               </Preconditions>
+               <ClaimsExchanges>
+                  <ClaimsExchange Id="AADUserRemoveMustResetPasswordUsingObjectId" TechnicalProfileReferenceId="AAD-UserRemoveMustResetPasswordUsingObjectId" />
+               </ClaimsExchanges>
+            </OrchestrationStep>
+            <OrchestrationStep Order="6" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+         </OrchestrationSteps>
+         <ClientDefinition ReferenceId="DefaultWeb" />
+      </UserJourney>
+   </UserJourneys>
+   <SubJourneys>
+      <SubJourney Id="PasswordReset" Type="Call">
+         <OrchestrationSteps>
+            <!-- Validate user's email address. -->
+            <OrchestrationStep Order="1" Type="ClaimsExchange">
+               <ClaimsExchanges>
+                  <ClaimsExchange Id="PasswordResetUsingEmailAddressExchange" TechnicalProfileReferenceId="LocalAccountDiscoveryUsingEmailAddress" />
+               </ClaimsExchanges>
+            </OrchestrationStep>
+            <!-- Collect and persist a new password. -->
+            <OrchestrationStep Order="2" Type="ClaimsExchange">
+               <ClaimsExchanges>
+                  <ClaimsExchange Id="NewCredentials" TechnicalProfileReferenceId="LocalAccountWritePasswordUsingObjectId" />
+               </ClaimsExchanges>
+            </OrchestrationStep>
+         </OrchestrationSteps>
+      </SubJourney>
+   </SubJourneys>
 </TrustFrameworkPolicy>
