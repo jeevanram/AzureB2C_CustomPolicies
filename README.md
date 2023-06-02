@@ -2,6 +2,7 @@
 
 References
 AzureB2C - https://learn.microsoft.com/en-us/azure/active-directory-b2c/overview
+
 1. https://learn.microsoft.com/en-us/azure/active-directory-b2c/user-migration
 2. https://learn.microsoft.com/en-us/azure/active-directory-b2c/custom-policy-overview
 3. https://learn.microsoft.com/en-us/azure/active-directory-b2c/tutorial-create-user-flows?pivots=b2c-custom-policy
