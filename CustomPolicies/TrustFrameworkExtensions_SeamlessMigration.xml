@@ -274,6 +274,19 @@
             </TechnicalProfile>
          </TechnicalProfiles>
       </ClaimsProvider>
+      <ClaimsProvider>	
+         <DisplayName>Local Account</DisplayName>	
+         <TechnicalProfiles>	
+            <TechnicalProfile Id="ForgotPassword">	
+               <DisplayName>Forgot your password?</DisplayName>	
+               <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>	
+               <OutputClaims>	
+                  <OutputClaim ClaimTypeReferenceId="isForgotPassword" DefaultValue="true" AlwaysUseDefaultValue="true"/>	
+               </OutputClaims>	
+               <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />	
+            </TechnicalProfile>	
+		   </TechnicalProfiles>	
+	   </ClaimsProvider>
    </ClaimsProviders>
    <UserJourneys>
       <UserJourney Id="SignUpOrSignInWithEmailVerificationOnSignIn">
@@ -281,6 +294,7 @@
             <OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
                <ClaimsProviderSelections>
                   <ClaimsProviderSelection ValidationClaimsExchangeId="LocalAccountSigninEmailExchange" />
+                  <ClaimsProviderSelection TargetClaimsExchangeId="ForgotPasswordExchange" />
                </ClaimsProviderSelections>
                <ClaimsExchanges>
                   <ClaimsExchange Id="LocalAccountSigninEmailExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Email" />
@@ -295,16 +309,28 @@
                </Preconditions>
                <ClaimsExchanges>
                   <ClaimsExchange Id="SignUpWithLogonEmailExchange" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonEmail" />
+                  <ClaimsExchange Id="ForgotPasswordExchange" TechnicalProfileReferenceId="ForgotPassword" />
                </ClaimsExchanges>
             </OrchestrationStep>
+            <OrchestrationStep Order="3" Type="InvokeSubJourney">	
+		         <Preconditions>	
+			         <Precondition Type="ClaimsExist" ExecuteActionsIf="false">	
+			            <Value>isForgotPassword</Value>	
+			            <Action>SkipThisOrchestrationStep</Action>	
+			         </Precondition>	
+		         </Preconditions>	
+		         <JourneyList>	
+			         <Candidate SubJourneyReferenceId="PasswordReset" />	
+		         </JourneyList>	
+		      </OrchestrationStep>
             <!-- This step reads any user attributes that we may not have received when in the token. -->
-            <OrchestrationStep Order="3" Type="ClaimsExchange">
+            <OrchestrationStep Order="4" Type="ClaimsExchange">
                <ClaimsExchanges>
                   <ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
                </ClaimsExchanges>
             </OrchestrationStep>
             <!-- This step forces email verification on sign in only. -->
-            <OrchestrationStep Order="4" Type="ClaimsExchange">
+            <OrchestrationStep Order="5" Type="ClaimsExchange">
                <Preconditions>
                   <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
                      <Value>extension_requiresMigration</Value>
@@ -315,7 +341,7 @@
                   <ClaimsExchange Id="EmailVerifyOnSignIn" TechnicalProfileReferenceId="EmailVerifyOnSignIn" />
                </ClaimsExchanges>
             </OrchestrationStep>
-            <OrchestrationStep Order="5" Type="ClaimsExchange">
+            <OrchestrationStep Order="6" Type="ClaimsExchange">
                <Preconditions>
                   <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
                      <Value>extension_requiresMigration</Value>
@@ -326,7 +352,7 @@
                   <ClaimsExchange Id="AADUserRemoveMustResetPasswordUsingObjectId" TechnicalProfileReferenceId="AAD-UserRemoveMustResetPasswordUsingObjectId" />
                </ClaimsExchanges>
             </OrchestrationStep>
-            <OrchestrationStep Order="6" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+            <OrchestrationStep Order="7" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
          </OrchestrationSteps>
          <ClientDefinition ReferenceId="DefaultWeb" />
       </UserJourney>
