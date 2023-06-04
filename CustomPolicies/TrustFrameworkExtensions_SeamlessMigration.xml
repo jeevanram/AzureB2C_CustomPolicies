@@ -63,6 +63,12 @@
          <DisplayName>Local Account SignIn</DisplayName>
          <TechnicalProfiles>
             <TechnicalProfile Id="SelfAsserted-LocalAccountSignin-Email">
+		<Metadata>	
+			<Item Key="setting.forgotPasswordLinkOverride">ForgotPasswordExchange</Item>	
+		</Metadata>	
+		<OutputClaimsTransformations>
+            		<OutputClaimsTransformation ReferenceId="CopySignInNameToReadOnly" />
+          	</OutputClaimsTransformations>
                <ValidationTechnicalProfiles>
                   <!--Add user migration validation technical profiles before login-NonInteractive -->
                   <!-- Populate extension_requireMigration into the claims pipeline -->
