@@ -6,13 +6,14 @@ AzureB2C - https://learn.microsoft.com/en-us/azure/active-directory-b2c/overview
 1. https://learn.microsoft.com/en-us/azure/active-directory-b2c/user-migration
 2. https://learn.microsoft.com/en-us/azure/active-directory-b2c/custom-policy-overview
 3. https://learn.microsoft.com/en-us/azure/active-directory-b2c/tutorial-create-user-flows?pivots=b2c-custom-policy
-4. https://github.com/Azure-Samples/active-directory-b2c-custom-policy-starterpack, https://github.com/azure-ad-b2c/samples
-5. https://github.com/azure-ad-b2c/user-migration/tree/master/seamless-account-migration
-6. https://learn.microsoft.com/en-us/azure/active-directory-b2c/restful-technical-profile
-7. https://learn.microsoft.com/en-us/azure/active-directory-b2c/secure-rest-api
-8. https://learn.microsoft.com/en-us/azure/active-directory-b2c/customize-ui-with-html?pivots=b2c-custom-policy
-9. https://learn.microsoft.com/en-us/azure/active-directory-b2c/userinfo-endpoint?pivots=b2c-custom-policy
-10. https://github.com/azure-ad-b2c/samples/tree/master/policies/signin-email-verification
+4. https://github.com/Azure-Samples/active-directory-b2c-custom-policy-starterpack
+5. https://github.com/azure-ad-b2c/samples
+6. https://github.com/azure-ad-b2c/user-migration/tree/master/seamless-account-migration
+7. https://learn.microsoft.com/en-us/azure/active-directory-b2c/restful-technical-profile
+8. https://learn.microsoft.com/en-us/azure/active-directory-b2c/secure-rest-api
+9. https://learn.microsoft.com/en-us/azure/active-directory-b2c/customize-ui-with-html?pivots=b2c-custom-policy
+10. https://learn.microsoft.com/en-us/azure/active-directory-b2c/userinfo-endpoint?pivots=b2c-custom-policy
+11. https://github.com/azure-ad-b2c/samples/tree/master/policies/signin-email-verification
 
  
 Stages of User Migration
