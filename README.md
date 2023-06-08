@@ -136,6 +136,7 @@ Setup Process
       identity provider rest API 
     - On TrustFrameworkExtensions_SeamlessMigration.xml, define the legacy identity provider API endpoint.
     - Make sure the AuthenticationType is NOT set to "None"
+    - B2C_1A_RestApiKey is a defined policy key in Identity Experience Framework
     - AuthenticationType can be Basic, API key based, OAuth Token but not "None"
       ```diff
       <TechnicalProfile Id="REST-API-SignUp">
@@ -150,3 +151,4 @@ Setup Process
          <Key Id="x-functions-key" StorageReferenceId="B2C_1A_RestApiKey" />
        </CryptographicKeys>
      </TechnicalProfile>
+
