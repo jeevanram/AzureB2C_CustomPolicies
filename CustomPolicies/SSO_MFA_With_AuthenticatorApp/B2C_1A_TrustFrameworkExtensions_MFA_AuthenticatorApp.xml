@@ -1,7 +1,7 @@
 <TrustFrameworkPolicy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" PolicySchemaVersion="0.3.0.0" 
     TenantId="yourtenant.onmicrosoft.com" 
-    PolicyId="B2C_1A_Demo_TrustFrameworkExtensions_MFA_AuthenticatorApp" 
-    PublicPolicyUri="http://yourtenant.onmicrosoft.com/B2C_1A_Demo_TrustFrameworkExtensions_MFA_AuthenticatorApp">
+    PolicyId="B2C_1A_TrustFrameworkExtensions_MFA_AuthenticatorApp" 
+    PublicPolicyUri="http://yourtenant.onmicrosoft.com/B2C_1A_TrustFrameworkExtensions_MFA_AuthenticatorApp">
 
   <BasePolicy>
     <TenantId>yourtenant.onmicrosoft.com</TenantId>
@@ -125,7 +125,7 @@
         </OutputClaims>
       </ClaimsTransformation>
 
-      <!-- Create the TOTP issuer name. The issuer name is your tenant name, such as "Contoso demo" -->
+      <!-- Create the TOTP issuer name. The issuer name is your tenant name -->
       <ClaimsTransformation Id="CreateIssuer" TransformationMethod="CreateStringClaim">
         <InputParameters>
           <InputParameter Id="value" DataType="string" Value="{AuthenticatorIssuer}" />
@@ -135,8 +135,7 @@
         </OutputClaims>
       </ClaimsTransformation>
 
-      <!-- Create the TOTP URI label. The label is a combination of the totpIdentifier and the issuer name:
-           For example, Contoso demo:emily@fabrikam.com-->
+      <!-- Create the TOTP URI label. The label is a combination of the totpIdentifier and the issuer name -->
       <ClaimsTransformation Id="CreateUriLabel" TransformationMethod="FormatStringMultipleClaims">
         <InputClaims>
           <InputClaim ClaimTypeReferenceId="issuer" TransformationClaimType="inputClaim1" />
@@ -150,9 +149,7 @@
         </OutputClaims>
       </ClaimsTransformation>
 
-      <!-- Create the TOTP URI. The label is a combination of the CreateUriLabel and the secret key:
-      For example, otpauth://totp/Contoso%20demo:emily@fabrikam.com?secret=fay2lj7ynpntjgqa&issuer=Contoso+demo
-      This URI is later converted into a QR code that is presented to the user-->
+      <!-- Create the TOTP URI. The label is a combination of the CreateUriLabel and the secret key-->
       <ClaimsTransformation Id="CreateUriString" TransformationMethod="BuildUri">
         <InputClaims>
           <InputClaim ClaimTypeReferenceId="uriLabel" TransformationClaimType="path" />
