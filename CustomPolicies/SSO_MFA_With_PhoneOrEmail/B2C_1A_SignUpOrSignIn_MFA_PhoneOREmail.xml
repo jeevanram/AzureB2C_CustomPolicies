@@ -1,6 +1,6 @@
 <TrustFrameworkPolicy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" PolicySchemaVersion="0.3.0.0" TenantId="yourtenant.onmicrosoft.com" PolicyId="B2C_1A_SignUpOrSignIn_MFA_PhoneOREmail" PublicPolicyUri="http://yourtenant.onmicrosoft.com/B2C_1A_SignUpOrSignIn_MFA_PhoneOREmail" TenantObjectId="c2c3c833-c599-4873-a4f2-c15e603187a9">
   <BasePolicy>
-    <TenantId></TenantId>
+    <TenantId>yourtenant.onmicrosoft.com</TenantId>
     <PolicyId>B2C_1A_TrustFrameworkExtensions</PolicyId>
   </BasePolicy>
   <BuildingBlocks>
