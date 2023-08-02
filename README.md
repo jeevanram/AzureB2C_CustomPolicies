@@ -8,7 +8,7 @@ References
 # Seamless UserMigration using CustomPolicies
  
 Stages of User Migration
-1)	Pre-Migration: Migrate existing users to AzureB2C with a default password and the “Require Migration” flag set to true.
+1)	Pre-Migration: Migrate existing users to AzureB2C with a default password with the “Require Migration” flag set to true.
 2)	When the user logs in, the username and password entered are validated against the legacy identity provider if the “Require migration” flag is set to true. On successful validation, the password entered by the user is updated in the AzureB2C account, and the “Require migration” flag is set to false.
 3)	Any login attempt by the user after the initial login validates the user credentials with AzureB2C.
 
