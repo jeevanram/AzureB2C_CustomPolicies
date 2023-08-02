@@ -1,4 +1,4 @@
-# AzureB2C_CustomPolicies
+# AzureB2C CustomPolicies
 
 References
 1) AzureB2C - https://learn.microsoft.com/en-us/azure/active-directory-b2c/overview
