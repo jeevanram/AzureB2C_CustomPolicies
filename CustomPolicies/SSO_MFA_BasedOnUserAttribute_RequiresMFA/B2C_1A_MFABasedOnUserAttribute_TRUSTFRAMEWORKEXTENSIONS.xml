@@ -172,7 +172,6 @@
 				<TechnicalProfile Id="SelfAsserted-LocalAccountSignin-Email">
 					<Metadata>
 						<Item Key="setting.forgotPasswordLinkOverride">ForgotPasswordExchange</Item>
-						<Item Key="setting.showSignupLink">false</Item>
 					</Metadata>
 				</TechnicalProfile>
 			</TechnicalProfiles>
