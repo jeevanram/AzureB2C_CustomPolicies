@@ -456,7 +456,7 @@
 		</ClaimsProvider>
 	</ClaimsProviders>
 	<UserJourneys>
-		<UserJourney Id="SignUpOrSignInWithForcePasswordReset" DefaultCpimIssuerTechnicalProfileReferenceId="JwtIssuer">
+		<UserJourney Id="SignUpOrSignInWithMFAConditionalAccess" DefaultCpimIssuerTechnicalProfileReferenceId="JwtIssuer">
 			<OrchestrationSteps>
 				<OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
 					<ClaimsProviderSelections>
