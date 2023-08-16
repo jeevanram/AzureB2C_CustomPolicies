@@ -1,358 +1,353 @@
 <TrustFrameworkPolicy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" PolicySchemaVersion="0.3.0.0" TenantId="yourtenant.onmicrosoft.com" PolicyId="B2C_1A_MFAWithConditionalAccess_TRUSTFRAMEWORKEXTENSIONS" PublicPolicyUri="http://yourtenant.onmicrosoft.com/B2C_1A_MFAWithConditionalAccess_TRUSTFRAMEWORKEXTENSIONS" TenantObjectId="your_tenant_guid(Directory/Tenant ID)">
-  <BasePolicy>
-    <TenantId>yourtenant.onmicrosoft.com</TenantId>
-    <PolicyId>B2C_1A_TrustFrameworkExtensions</PolicyId>
-  </BasePolicy>
-  <BuildingBlocks>
-    <ClaimsSchema>
-	<!-- CA claims  -->
-	    <ClaimType Id="responseMsg">
-        <DisplayName></DisplayName>
-        <DataType>string</DataType>
-        <AdminHelpText>A claim responsible for holding response messages to send to the relying party</AdminHelpText>
-        <UserHelpText>A claim responsible for holding response messages to send to the relying party</UserHelpText>
-        <UserInputType>Paragraph</UserInputType>
-      </ClaimType>
-	  
-      <ClaimType Id="conditionalAccessClaimCollection">
-        <DisplayName>Conditional Access claims</DisplayName>
-        <DataType>stringCollection</DataType>
-        <AdminHelpText>The list of claims which are the result of CA check</AdminHelpText>
-      </ClaimType>
-      <ClaimType Id="trustFrameworkPolicy">
-        <DisplayName>trustFrameworkPolicy</DisplayName>
-        <DataType>string</DataType>
-        <UserHelpText>TtrustFrameworkPolicy name.</UserHelpText>
-      </ClaimType>
-      <ClaimType Id="ConditionalAccessStatus">
-        <DisplayName>The status of CA evaluation</DisplayName>
-        <DataType>stringCollection</DataType>
-        <AdminHelpText>The status of CA evaluation</AdminHelpText>
-      </ClaimType>
-      <ClaimType Id="AuthenticationMethodsUsed">
-        <DisplayName>Authentication methods used</DisplayName>
-        <DataType>stringCollection</DataType>
-        <AdminHelpText>The list of authentication methods used</AdminHelpText>
-      </ClaimType>
-      <ClaimType Id="AuthenticationMethodUsed">
-        <DisplayName>Authentication method used</DisplayName>
-        <DataType>string</DataType>
-        <AdminHelpText>The authentication method used</AdminHelpText>
-      </ClaimType>
-      <ClaimType Id="IsFederated">
-        <DisplayName>IsFederated</DisplayName>
-        <DataType>boolean</DataType>
-        <AdminHelpText>Is user authenticated via an external identity provider</AdminHelpText>
-      </ClaimType>
-      <ClaimType Id="IsMfaRegistered">
-        <DisplayName>IsMfaRegistered</DisplayName>
-        <DataType>boolean</DataType>
-        <AdminHelpText>Is user registered for MFA</AdminHelpText>
-      </ClaimType>
-      <ClaimType Id="CAChallengeIsMfa">
-        <DisplayName>CAChallengeIsMfa</DisplayName>
-        <DataType>boolean</DataType>
-      </ClaimType>
-      <ClaimType Id="CAChallengeIsChgPwd">
-        <DisplayName>CAChallengeIsChgPwd</DisplayName>
-        <DataType>boolean</DataType>
-      </ClaimType>
-      <ClaimType Id="CAChallengeIsBlock">
-        <DisplayName>CAChallengeIsBlock</DisplayName>
-        <DataType>boolean</DataType>
-      </ClaimType>
-      <ClaimType Id="estsRequestId">
-        <DisplayName>estsRequestId</DisplayName>
-        <DataType>string</DataType>
-        <AdminHelpText>stores request id from ests</AdminHelpText>
-      </ClaimType>
-
-      <!-- End of CA claims -->
-	  
-	      <ClaimType Id="errorCode">
-        <DisplayName>errorCode</DisplayName>
-        <DataType>string</DataType>
-        <AdminHelpText>errorCode</AdminHelpText>
-        <UserHelpText>errorCode</UserHelpText>
-      </ClaimType>
-	        <ClaimType Id="errorMessage">
-        <DisplayName>errorMessage</DisplayName>
-        <DataType>string</DataType>
-        <AdminHelpText>errorMessage</AdminHelpText>
-        <UserHelpText>errorMessage</UserHelpText>
-      </ClaimType>
-      <!--Demo: Specifies whether user must reset the password-->
-      <ClaimType Id="extension_requiresMigration">
-        <DisplayName>Must reset password</DisplayName>
-        <DataType>boolean</DataType>
-        <UserHelpText>Specifies whether user must reset the password</UserHelpText>
-      </ClaimType>
-	  <ClaimType Id="extension_requiresMFA">
-        <DisplayName>Requires MFA after login</DisplayName>
-        <DataType>boolean</DataType>
-        <UserHelpText>Specifies whether user must do MFA after login</UserHelpText>
-      </ClaimType>
-	  <ClaimType Id="extension_mfaByPhoneOrEmail">
-        <DisplayName>Please select your preferred MFA method</DisplayName>
-        <DataType>string</DataType>
-        <UserInputType>RadioSingleSelect</UserInputType>
-        <Restriction>
-          <Enumeration Text="Phone" Value="phone" SelectByDefault="true" />
-          <Enumeration Text="Email " Value="email" SelectByDefault="false" />
-        </Restriction>
-      </ClaimType>
-      <ClaimType Id="isForgotPassword">
-        <DisplayName>isForgotPassword</DisplayName>
-        <DataType>boolean</DataType>
-        <AdminHelpText>Whether the user has selected Forgot your Password</AdminHelpText>
-      </ClaimType>
-	  <ClaimType Id="readOnlyEmail">
-        <DisplayName>Email Address</DisplayName>
-        <DataType>string</DataType>
-        <UserHelpText />
-        <UserInputType>Readonly</UserInputType>
-      </ClaimType>
-    </ClaimsSchema>
-	<ClaimsTransformations>
-	 <!-- Conditional access claims transformations-->
-      <ClaimsTransformation Id="AddToAuthenticationMethodsUsed" TransformationMethod="AddItemToStringCollection">
-        <InputClaims>
-          <InputClaim ClaimTypeReferenceId="AuthenticationMethodUsed" TransformationClaimType="item" />
-          <InputClaim ClaimTypeReferenceId="AuthenticationMethodsUsed" TransformationClaimType="collection" />
-        </InputClaims>
-        <OutputClaims>
-          <OutputClaim ClaimTypeReferenceId="AuthenticationMethodsUsed" TransformationClaimType="collection" />
-        </OutputClaims>
-      </ClaimsTransformation>
-      <ClaimsTransformation Id="CreatePasswordAuthenticationMethodClaim" TransformationMethod="CreateStringClaim">
-        <InputParameters>
-          <InputParameter Id="value" DataType="string" Value="Password" />
-        </InputParameters>
-        <OutputClaims>
-          <OutputClaim ClaimTypeReferenceId="AuthenticationMethodUsed" TransformationClaimType="createdClaim" />
-        </OutputClaims>
-      </ClaimsTransformation>
-      <ClaimsTransformation Id="CreateOneTimePasscodeAuthenticationMethodClaim" TransformationMethod="CreateStringClaim">
-        <InputParameters>
-          <InputParameter Id="value" DataType="string" Value="OneTimePasscode" />
-        </InputParameters>
-        <OutputClaims>
-          <OutputClaim ClaimTypeReferenceId="AuthenticationMethodUsed" TransformationClaimType="createdClaim" />
-        </OutputClaims>
-      </ClaimsTransformation>
-      <ClaimsTransformation Id="IsMfaRegisteredCT" TransformationMethod="DoesClaimExist">
-        <InputClaims>
-          <InputClaim ClaimTypeReferenceId="strongAuthenticationPhoneNumber" TransformationClaimType="inputClaim" />
-        </InputClaims>
-        <OutputClaims>
-          <OutputClaim ClaimTypeReferenceId="IsMfaRegistered" TransformationClaimType="outputClaim" />
-        </OutputClaims>
-      </ClaimsTransformation>
-      <ClaimsTransformation Id="SetCAChallengeIsMfa" TransformationMethod="StringCollectionContains">
-        <InputClaims>
-          <InputClaim ClaimTypeReferenceId="conditionalAccessClaimCollection" TransformationClaimType="inputClaim" />
-        </InputClaims>
-        <InputParameters>
-          <InputParameter Id="item" DataType="string" Value="mfa" />
-          <InputParameter Id="ignoreCase" DataType="string" Value="true" />
-        </InputParameters>
-        <OutputClaims>
-          <OutputClaim ClaimTypeReferenceId="CAChallengeIsMfa" TransformationClaimType="outputClaim" />
-        </OutputClaims>
-      </ClaimsTransformation>
-      <ClaimsTransformation Id="SetCAChallengeIsChgPwd" TransformationMethod="StringCollectionContains">
-        <InputClaims>
-          <InputClaim ClaimTypeReferenceId="conditionalAccessClaimCollection" TransformationClaimType="inputClaim" />
-        </InputClaims>
-        <InputParameters>
-          <InputParameter Id="item" DataType="string" Value="chg_pwd" />
-          <InputParameter Id="ignoreCase" DataType="string" Value="true" />
-        </InputParameters>
-        <OutputClaims>
-          <OutputClaim ClaimTypeReferenceId="CAChallengeIsChgPwd" TransformationClaimType="outputClaim" />
-        </OutputClaims>
-      </ClaimsTransformation>
-      <ClaimsTransformation Id="SetCAChallengeIsBlock" TransformationMethod="StringCollectionContains">
-        <InputClaims>
-          <InputClaim ClaimTypeReferenceId="conditionalAccessClaimCollection" TransformationClaimType="inputClaim" />
-        </InputClaims>
-        <InputParameters>
-          <InputParameter Id="item" DataType="string" Value="block" />
-          <InputParameter Id="ignoreCase" DataType="string" Value="true" />
-        </InputParameters>
-        <OutputClaims>
-          <OutputClaim ClaimTypeReferenceId="CAChallengeIsBlock" TransformationClaimType="outputClaim" />
-        </OutputClaims>
-      </ClaimsTransformation>
-	  <!-- End of Conditional access claims transformations -->
-      <ClaimsTransformation Id="GenerateErrorCode" TransformationMethod="CreateStringClaim">
-        <InputParameters>
-          <InputParameter Id="value" DataType="string" Value="Error_001" />
-        </InputParameters>
-        <OutputClaims>
-          <OutputClaim ClaimTypeReferenceId="errorCode" TransformationClaimType="createdClaim" />
-        </OutputClaims>
-      </ClaimsTransformation>
-      <ClaimsTransformation Id="GenerateErrorMessage" TransformationMethod="CreateStringClaim">
-        <InputParameters>
-          <InputParameter Id="value" DataType="string" Value="Insert error description." />
-        </InputParameters>
-        <OutputClaims>
-          <OutputClaim ClaimTypeReferenceId="errorMessage" TransformationClaimType="createdClaim" />
-        </OutputClaims>
-      </ClaimsTransformation>
-	 </ClaimsTransformations>
-  </BuildingBlocks>
-  <ClaimsProviders>
-      <ClaimsProvider>
-      <DisplayName>Self Asserted</DisplayName>
-      <TechnicalProfiles>
-        <TechnicalProfile Id="SelfAsserted-Select-MFA-Method">
-          <DisplayName>Allow user to choose their MFA Method</DisplayName>
-          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
-          <Metadata>
-            <Item Key="ContentDefinitionReferenceId">api.selfasserted</Item>
-          </Metadata>
-          <InputClaimsTransformations>
-            <InputClaimsTransformation ReferenceId="generateErrorCode" />
-            <InputClaimsTransformation ReferenceId="generateErrorMessage" />
-          </InputClaimsTransformations>
-          <OutputClaims>
-            <OutputClaim ClaimTypeReferenceId="extension_mfaByPhoneOrEmail" Required="true" />
-          </OutputClaims>
-        </TechnicalProfile>
-        <TechnicalProfile Id="EmailVerifyOnSignIn">
-          <DisplayName>EmailVerifyOnSignIn</DisplayName>
-          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
-          <Metadata>
-            <Item Key="ContentDefinitionReferenceId">api.selfasserted</Item>
-          </Metadata>
-          <InputClaims>
-            <InputClaim ClaimTypeReferenceId="readOnlyEmail" />
-          </InputClaims>
-          <OutputClaims>
-            <!-- Required claims -->
-            <OutputClaim ClaimTypeReferenceId="isActiveMFASession" DefaultValue="true" />
-            <OutputClaim ClaimTypeReferenceId="readOnlyEmail" PartnerClaimType="Verified.Email" />
-          </OutputClaims>
-          <ValidationTechnicalProfiles>
-            <ValidationTechnicalProfile ReferenceId="AAD-UserWriteMFAMethod"></ValidationTechnicalProfile>
-          </ValidationTechnicalProfiles>
-          <UseTechnicalProfileForSessionManagement ReferenceId="SM-MFA" />
-        </TechnicalProfile>
-		
-		<TechnicalProfile Id="ShowBlockPage">
-          <DisplayName>Show Block message</DisplayName>
-          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
-          <Metadata>
-            <Item Key="ContentDefinitionReferenceId">api.selfasserted</Item>
-            <Item Key="TokenLifeTimeInSeconds">3600</Item>
-            <Item Key="AllowGenerationOfClaimsWithNullValues">true</Item>
-            <Item Key="setting.showContinueButton">false</Item>
-            <Item Key="setting.showCancelButton">false</Item>
-          </Metadata>
-          <CryptographicKeys>
-            <Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
-          </CryptographicKeys>
-          <InputClaims>
-            <InputClaim ClaimTypeReferenceId="responseMsg" DefaultValue="Due to recent activity associated with your account, your login has been temporarily blocked." />
-          </InputClaims>
-          <OutputClaims>
-            <OutputClaim ClaimTypeReferenceId="responseMsg" />
-          </OutputClaims>
-          <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
-          <EnabledForUserJourneys>Always</EnabledForUserJourneys>
-        </TechnicalProfile>
-		
-      </TechnicalProfiles>
-    </ClaimsProvider>
-    <ClaimsProvider>
-      <DisplayName>Azure Active Directory</DisplayName>
-      <TechnicalProfiles>
-        <TechnicalProfile Id="AAD-UserReadUsingObjectId">
-          <OutputClaims>
-            <!-- Read the 'reset password' extension attribute -->
-            <OutputClaim ClaimTypeReferenceId="extension_requiresMigration" />
-			 <OutputClaim ClaimTypeReferenceId="extension_mfaByPhoneOrEmail" />
-			 <OutputClaim ClaimTypeReferenceId="extension_requiresMFA" />
-          </OutputClaims>
-        </TechnicalProfile>
-        <TechnicalProfile Id="AAD-UserRemoveMustResetPasswordUsingObjectId">
-          <Metadata>
-            <Item Key="Operation">DeleteClaims</Item>
-          </Metadata>
-          <InputClaims>
-            <InputClaim ClaimTypeReferenceId="objectId" Required="true" />
-          </InputClaims>
-          <PersistedClaims>
-            <PersistedClaim ClaimTypeReferenceId="objectId" />
-            <PersistedClaim ClaimTypeReferenceId="extension_requiresMigration" />
-          </PersistedClaims>
-          <IncludeTechnicalProfile ReferenceId="AAD-Common" />
-        </TechnicalProfile>
-		        <TechnicalProfile Id="AAD-UserWriteMFAMethod">
-          <Metadata>
-            <Item Key="Operation">Write</Item>
-            <Item Key="RaiseErrorIfClaimsPrincipalAlreadyExists">false</Item>
-          </Metadata>
-          <InputClaims>
-            <InputClaim ClaimTypeReferenceId="objectId" />
-          </InputClaims>
-          <PersistedClaims>
-            <!-- Required claims -->
-            <PersistedClaim ClaimTypeReferenceId="objectId" />
-            <PersistedClaim ClaimTypeReferenceId="userPrincipalName" />
-            <PersistedClaim ClaimTypeReferenceId="extension_mfaByPhoneOrEmail" />
-            <PersistedClaim ClaimTypeReferenceId="displayName" />
-          </PersistedClaims>
-          <IncludeTechnicalProfile ReferenceId="AAD-Common" />
-          <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
-        </TechnicalProfile>
-        <TechnicalProfile Id="AAD-UserWritePhoneNumberUsingObjectId">
-          <PersistedClaims>
-            <!--Sample: Add the MFA preferred method to the persisted claims collection -->
-            <PersistedClaim ClaimTypeReferenceId="extension_mfaByPhoneOrEmail" />
-          </PersistedClaims>
-        </TechnicalProfile>
-        <TechnicalProfile Id="AAD-UserReadUsingAlternativeSecurityId">
-          <OutputClaims>
-            <!--Sample: Read the MFA preferred method-->
-            <OutputClaim ClaimTypeReferenceId="extension_mfaByPhoneOrEmail" />
-          </OutputClaims>
-        </TechnicalProfile>
-        <!--Demo: to create the extension attribute extension_mustResetPassword, you should upload the policy 
+	<BasePolicy>
+		<TenantId>yourtenant.onmicrosoft.com</TenantId>
+		<PolicyId>B2C_1A_TrustFrameworkExtensions</PolicyId>
+	</BasePolicy>
+	<BuildingBlocks>
+		<ClaimsSchema>
+			<!-- CA claims  -->
+			<ClaimType Id="responseMsg">
+				<DisplayName/>
+				<DataType>string</DataType>
+				<AdminHelpText>A claim responsible for holding response messages to send to the relying party</AdminHelpText>
+				<UserHelpText>A claim responsible for holding response messages to send to the relying party</UserHelpText>
+				<UserInputType>Paragraph</UserInputType>
+			</ClaimType>
+			<ClaimType Id="conditionalAccessClaimCollection">
+				<DisplayName>Conditional Access claims</DisplayName>
+				<DataType>stringCollection</DataType>
+				<AdminHelpText>The list of claims which are the result of CA check</AdminHelpText>
+			</ClaimType>
+			<ClaimType Id="trustFrameworkPolicy">
+				<DisplayName>trustFrameworkPolicy</DisplayName>
+				<DataType>string</DataType>
+				<UserHelpText>TtrustFrameworkPolicy name.</UserHelpText>
+			</ClaimType>
+			<ClaimType Id="ConditionalAccessStatus">
+				<DisplayName>The status of CA evaluation</DisplayName>
+				<DataType>stringCollection</DataType>
+				<AdminHelpText>The status of CA evaluation</AdminHelpText>
+			</ClaimType>
+			<ClaimType Id="AuthenticationMethodsUsed">
+				<DisplayName>Authentication methods used</DisplayName>
+				<DataType>stringCollection</DataType>
+				<AdminHelpText>The list of authentication methods used</AdminHelpText>
+			</ClaimType>
+			<ClaimType Id="AuthenticationMethodUsed">
+				<DisplayName>Authentication method used</DisplayName>
+				<DataType>string</DataType>
+				<AdminHelpText>The authentication method used</AdminHelpText>
+			</ClaimType>
+			<ClaimType Id="IsFederated">
+				<DisplayName>IsFederated</DisplayName>
+				<DataType>boolean</DataType>
+				<AdminHelpText>Is user authenticated via an external identity provider</AdminHelpText>
+			</ClaimType>
+			<ClaimType Id="IsMfaRegistered">
+				<DisplayName>IsMfaRegistered</DisplayName>
+				<DataType>boolean</DataType>
+				<AdminHelpText>Is user registered for MFA</AdminHelpText>
+			</ClaimType>
+			<ClaimType Id="CAChallengeIsMfa">
+				<DisplayName>CAChallengeIsMfa</DisplayName>
+				<DataType>boolean</DataType>
+			</ClaimType>
+			<ClaimType Id="CAChallengeIsChgPwd">
+				<DisplayName>CAChallengeIsChgPwd</DisplayName>
+				<DataType>boolean</DataType>
+			</ClaimType>
+			<ClaimType Id="CAChallengeIsBlock">
+				<DisplayName>CAChallengeIsBlock</DisplayName>
+				<DataType>boolean</DataType>
+			</ClaimType>
+			<ClaimType Id="estsRequestId">
+				<DisplayName>estsRequestId</DisplayName>
+				<DataType>string</DataType>
+				<AdminHelpText>stores request id from ests</AdminHelpText>
+			</ClaimType>
+			<!-- End of CA claims -->
+			<ClaimType Id="errorCode">
+				<DisplayName>errorCode</DisplayName>
+				<DataType>string</DataType>
+				<AdminHelpText>errorCode</AdminHelpText>
+				<UserHelpText>errorCode</UserHelpText>
+			</ClaimType>
+			<ClaimType Id="errorMessage">
+				<DisplayName>errorMessage</DisplayName>
+				<DataType>string</DataType>
+				<AdminHelpText>errorMessage</AdminHelpText>
+				<UserHelpText>errorMessage</UserHelpText>
+			</ClaimType>
+			<!--Demo: Specifies whether user must reset the password-->
+			<ClaimType Id="extension_requiresMigration">
+				<DisplayName>Must reset password</DisplayName>
+				<DataType>boolean</DataType>
+				<UserHelpText>Specifies whether user must reset the password</UserHelpText>
+			</ClaimType>
+			<ClaimType Id="extension_requiresMFA">
+				<DisplayName>Requires MFA after login</DisplayName>
+				<DataType>boolean</DataType>
+				<UserHelpText>Specifies whether user must do MFA after login</UserHelpText>
+			</ClaimType>
+			<ClaimType Id="extension_mfaByPhoneOrEmail">
+				<DisplayName>Please select your preferred MFA method</DisplayName>
+				<DataType>string</DataType>
+				<UserInputType>RadioSingleSelect</UserInputType>
+				<Restriction>
+					<Enumeration Text="Phone" Value="phone" SelectByDefault="true"/>
+					<Enumeration Text="Email " Value="email" SelectByDefault="false"/>
+				</Restriction>
+			</ClaimType>
+			<ClaimType Id="isForgotPassword">
+				<DisplayName>isForgotPassword</DisplayName>
+				<DataType>boolean</DataType>
+				<AdminHelpText>Whether the user has selected Forgot your Password</AdminHelpText>
+			</ClaimType>
+			<ClaimType Id="readOnlyEmail">
+				<DisplayName>Email Address</DisplayName>
+				<DataType>string</DataType>
+				<UserHelpText/>
+				<UserInputType>Readonly</UserInputType>
+			</ClaimType>
+		</ClaimsSchema>
+		<ClaimsTransformations>
+			<!-- Conditional access claims transformations-->
+			<ClaimsTransformation Id="AddToAuthenticationMethodsUsed" TransformationMethod="AddItemToStringCollection">
+				<InputClaims>
+					<InputClaim ClaimTypeReferenceId="AuthenticationMethodUsed" TransformationClaimType="item"/>
+					<InputClaim ClaimTypeReferenceId="AuthenticationMethodsUsed" TransformationClaimType="collection"/>
+				</InputClaims>
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="AuthenticationMethodsUsed" TransformationClaimType="collection"/>
+				</OutputClaims>
+			</ClaimsTransformation>
+			<ClaimsTransformation Id="CreatePasswordAuthenticationMethodClaim" TransformationMethod="CreateStringClaim">
+				<InputParameters>
+					<InputParameter Id="value" DataType="string" Value="Password"/>
+				</InputParameters>
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="AuthenticationMethodUsed" TransformationClaimType="createdClaim"/>
+				</OutputClaims>
+			</ClaimsTransformation>
+			<ClaimsTransformation Id="CreateOneTimePasscodeAuthenticationMethodClaim" TransformationMethod="CreateStringClaim">
+				<InputParameters>
+					<InputParameter Id="value" DataType="string" Value="OneTimePasscode"/>
+				</InputParameters>
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="AuthenticationMethodUsed" TransformationClaimType="createdClaim"/>
+				</OutputClaims>
+			</ClaimsTransformation>
+			<ClaimsTransformation Id="IsMfaRegisteredCT" TransformationMethod="DoesClaimExist">
+				<InputClaims>
+					<InputClaim ClaimTypeReferenceId="strongAuthenticationPhoneNumber" TransformationClaimType="inputClaim"/>
+				</InputClaims>
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="IsMfaRegistered" TransformationClaimType="outputClaim"/>
+				</OutputClaims>
+			</ClaimsTransformation>
+			<ClaimsTransformation Id="SetCAChallengeIsMfa" TransformationMethod="StringCollectionContains">
+				<InputClaims>
+					<InputClaim ClaimTypeReferenceId="conditionalAccessClaimCollection" TransformationClaimType="inputClaim"/>
+				</InputClaims>
+				<InputParameters>
+					<InputParameter Id="item" DataType="string" Value="mfa"/>
+					<InputParameter Id="ignoreCase" DataType="string" Value="true"/>
+				</InputParameters>
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="CAChallengeIsMfa" TransformationClaimType="outputClaim"/>
+				</OutputClaims>
+			</ClaimsTransformation>
+			<ClaimsTransformation Id="SetCAChallengeIsChgPwd" TransformationMethod="StringCollectionContains">
+				<InputClaims>
+					<InputClaim ClaimTypeReferenceId="conditionalAccessClaimCollection" TransformationClaimType="inputClaim"/>
+				</InputClaims>
+				<InputParameters>
+					<InputParameter Id="item" DataType="string" Value="chg_pwd"/>
+					<InputParameter Id="ignoreCase" DataType="string" Value="true"/>
+				</InputParameters>
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="CAChallengeIsChgPwd" TransformationClaimType="outputClaim"/>
+				</OutputClaims>
+			</ClaimsTransformation>
+			<ClaimsTransformation Id="SetCAChallengeIsBlock" TransformationMethod="StringCollectionContains">
+				<InputClaims>
+					<InputClaim ClaimTypeReferenceId="conditionalAccessClaimCollection" TransformationClaimType="inputClaim"/>
+				</InputClaims>
+				<InputParameters>
+					<InputParameter Id="item" DataType="string" Value="block"/>
+					<InputParameter Id="ignoreCase" DataType="string" Value="true"/>
+				</InputParameters>
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="CAChallengeIsBlock" TransformationClaimType="outputClaim"/>
+				</OutputClaims>
+			</ClaimsTransformation>
+			<!-- End of Conditional access claims transformations -->
+			<ClaimsTransformation Id="GenerateErrorCode" TransformationMethod="CreateStringClaim">
+				<InputParameters>
+					<InputParameter Id="value" DataType="string" Value="Error_001"/>
+				</InputParameters>
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="errorCode" TransformationClaimType="createdClaim"/>
+				</OutputClaims>
+			</ClaimsTransformation>
+			<ClaimsTransformation Id="GenerateErrorMessage" TransformationMethod="CreateStringClaim">
+				<InputParameters>
+					<InputParameter Id="value" DataType="string" Value="Insert error description."/>
+				</InputParameters>
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="errorMessage" TransformationClaimType="createdClaim"/>
+				</OutputClaims>
+			</ClaimsTransformation>
+		</ClaimsTransformations>
+	</BuildingBlocks>
+	<ClaimsProviders>
+		<ClaimsProvider>
+			<DisplayName>Self Asserted</DisplayName>
+			<TechnicalProfiles>
+				<TechnicalProfile Id="SelfAsserted-Select-MFA-Method">
+					<DisplayName>Allow user to choose their MFA Method</DisplayName>
+					<Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+					<Metadata>
+						<Item Key="ContentDefinitionReferenceId">api.selfasserted</Item>
+					</Metadata>
+					<InputClaimsTransformations>
+						<InputClaimsTransformation ReferenceId="generateErrorCode"/>
+						<InputClaimsTransformation ReferenceId="generateErrorMessage"/>
+					</InputClaimsTransformations>
+					<OutputClaims>
+						<OutputClaim ClaimTypeReferenceId="extension_mfaByPhoneOrEmail" Required="true"/>
+					</OutputClaims>
+				</TechnicalProfile>
+				<TechnicalProfile Id="EmailVerifyOnSignIn">
+					<DisplayName>EmailVerifyOnSignIn</DisplayName>
+					<Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+					<Metadata>
+						<Item Key="ContentDefinitionReferenceId">api.selfasserted</Item>
+					</Metadata>
+					<InputClaims>
+						<InputClaim ClaimTypeReferenceId="readOnlyEmail"/>
+					</InputClaims>
+					<OutputClaims>
+						<!-- Required claims -->
+						<OutputClaim ClaimTypeReferenceId="isActiveMFASession" DefaultValue="true"/>
+						<OutputClaim ClaimTypeReferenceId="readOnlyEmail" PartnerClaimType="Verified.Email"/>
+					</OutputClaims>
+					<ValidationTechnicalProfiles>
+						<ValidationTechnicalProfile ReferenceId="AAD-UserWriteMFAMethod"/>
+					</ValidationTechnicalProfiles>
+					<UseTechnicalProfileForSessionManagement ReferenceId="SM-MFA"/>
+				</TechnicalProfile>
+				<TechnicalProfile Id="ShowBlockPage">
+					<DisplayName>Show Block message</DisplayName>
+					<Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+					<Metadata>
+						<Item Key="ContentDefinitionReferenceId">api.selfasserted</Item>
+						<Item Key="TokenLifeTimeInSeconds">3600</Item>
+						<Item Key="AllowGenerationOfClaimsWithNullValues">true</Item>
+						<Item Key="setting.showContinueButton">false</Item>
+						<Item Key="setting.showCancelButton">false</Item>
+					</Metadata>
+					<CryptographicKeys>
+						<Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer"/>
+					</CryptographicKeys>
+					<InputClaims>
+						<InputClaim ClaimTypeReferenceId="responseMsg" DefaultValue="Due to recent activity associated with your account, your login has been temporarily blocked."/>
+					</InputClaims>
+					<OutputClaims>
+						<OutputClaim ClaimTypeReferenceId="responseMsg"/>
+					</OutputClaims>
+					<UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop"/>
+					<EnabledForUserJourneys>Always</EnabledForUserJourneys>
+				</TechnicalProfile>
+			</TechnicalProfiles>
+		</ClaimsProvider>
+		<ClaimsProvider>
+			<DisplayName>Azure Active Directory</DisplayName>
+			<TechnicalProfiles>
+				<TechnicalProfile Id="AAD-UserReadUsingObjectId">
+					<OutputClaims>
+						<!-- Read the 'reset password' extension attribute -->
+						<OutputClaim ClaimTypeReferenceId="extension_requiresMigration"/>
+						<OutputClaim ClaimTypeReferenceId="extension_mfaByPhoneOrEmail"/>
+						<OutputClaim ClaimTypeReferenceId="extension_requiresMFA"/>
+					</OutputClaims>
+				</TechnicalProfile>
+				<TechnicalProfile Id="AAD-UserRemoveMustResetPasswordUsingObjectId">
+					<Metadata>
+						<Item Key="Operation">DeleteClaims</Item>
+					</Metadata>
+					<InputClaims>
+						<InputClaim ClaimTypeReferenceId="objectId" Required="true"/>
+					</InputClaims>
+					<PersistedClaims>
+						<PersistedClaim ClaimTypeReferenceId="objectId"/>
+						<PersistedClaim ClaimTypeReferenceId="extension_requiresMigration"/>
+					</PersistedClaims>
+					<IncludeTechnicalProfile ReferenceId="AAD-Common"/>
+				</TechnicalProfile>
+				<TechnicalProfile Id="AAD-UserWriteMFAMethod">
+					<Metadata>
+						<Item Key="Operation">Write</Item>
+						<Item Key="RaiseErrorIfClaimsPrincipalAlreadyExists">false</Item>
+					</Metadata>
+					<InputClaims>
+						<InputClaim ClaimTypeReferenceId="objectId"/>
+					</InputClaims>
+					<PersistedClaims>
+						<!-- Required claims -->
+						<PersistedClaim ClaimTypeReferenceId="objectId"/>
+						<PersistedClaim ClaimTypeReferenceId="userPrincipalName"/>
+						<PersistedClaim ClaimTypeReferenceId="extension_mfaByPhoneOrEmail"/>
+						<PersistedClaim ClaimTypeReferenceId="displayName"/>
+					</PersistedClaims>
+					<IncludeTechnicalProfile ReferenceId="AAD-Common"/>
+					<UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD"/>
+				</TechnicalProfile>
+				<TechnicalProfile Id="AAD-UserWritePhoneNumberUsingObjectId">
+					<PersistedClaims>
+						<!--Sample: Add the MFA preferred method to the persisted claims collection -->
+						<PersistedClaim ClaimTypeReferenceId="extension_mfaByPhoneOrEmail"/>
+					</PersistedClaims>
+				</TechnicalProfile>
+				<TechnicalProfile Id="AAD-UserReadUsingAlternativeSecurityId">
+					<OutputClaims>
+						<!--Sample: Read the MFA preferred method-->
+						<OutputClaim ClaimTypeReferenceId="extension_mfaByPhoneOrEmail"/>
+					</OutputClaims>
+				</TechnicalProfile>
+				<!--Demo: to create the extension attribute extension_mustResetPassword, you should upload the policy 
             and create one account. Then ***comment out this technical profile***.
             -->
-        <!--<TechnicalProfile Id="AAD-UserWriteUsingLogonEmail">
+				<!--<TechnicalProfile Id="AAD-UserWriteUsingLogonEmail">
           <PersistedClaims>
             <PersistedClaim ClaimTypeReferenceId="extension_requiresMigration" DefaultValue="true" />
           </PersistedClaims>
         </TechnicalProfile>-->
-        <TechnicalProfile Id="SelfAsserted-LocalAccountSignin-Email">
-          <Metadata>
-            <Item Key="setting.forgotPasswordLinkOverride">ForgotPasswordExchange</Item>
-			<Item Key="setting.showSignupLink">false</Item>
-          </Metadata>
-        </TechnicalProfile>
-      </TechnicalProfiles>
-    </ClaimsProvider>
-    <ClaimsProvider>
-      <DisplayName>Local Account</DisplayName>
-      <TechnicalProfiles>
-        <TechnicalProfile Id="ForgotPassword">
-          <DisplayName>Forgot your password?</DisplayName>
-          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
-          <OutputClaims>
-            <OutputClaim ClaimTypeReferenceId="isForgotPassword" DefaultValue="true" AlwaysUseDefaultValue="true" />
-          </OutputClaims>
-          <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
-        </TechnicalProfile>
-        <!-- <TechnicalProfile Id="SelfAsserted-LocalAccountSignin-Email-Forgot">	 -->
-        <!-- <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" /> -->
-        <!-- </TechnicalProfile> -->
-      </TechnicalProfiles>
-    </ClaimsProvider>
-	<ClaimsProvider>
+				<TechnicalProfile Id="SelfAsserted-LocalAccountSignin-Email">
+					<Metadata>
+						<Item Key="setting.forgotPasswordLinkOverride">ForgotPasswordExchange</Item>
+						<Item Key="setting.showSignupLink">false</Item>
+					</Metadata>
+				</TechnicalProfile>
+			</TechnicalProfiles>
+		</ClaimsProvider>
+		<ClaimsProvider>
+			<DisplayName>Local Account</DisplayName>
+			<TechnicalProfiles>
+				<TechnicalProfile Id="ForgotPassword">
+					<DisplayName>Forgot your password?</DisplayName>
+					<Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+					<OutputClaims>
+						<OutputClaim ClaimTypeReferenceId="isForgotPassword" DefaultValue="true" AlwaysUseDefaultValue="true"/>
+					</OutputClaims>
+					<UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop"/>
+				</TechnicalProfile>
+				<!-- <TechnicalProfile Id="SelfAsserted-LocalAccountSignin-Email-Forgot">	 -->
+				<!-- <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" /> -->
+				<!-- </TechnicalProfile> -->
+			</TechnicalProfiles>
+		</ClaimsProvider>
+		<ClaimsProvider>
 			<Domain>Org AD Domain</Domain>
 			<DisplayName>Login using Org AzureAD</DisplayName>
 			<TechnicalProfiles>
@@ -393,480 +388,472 @@
 				</TechnicalProfile>
 			</TechnicalProfiles>
 		</ClaimsProvider>
-    <ClaimsProvider>
-      <DisplayName>OAuth2 Error TPs</DisplayName>
-      <TechnicalProfiles>
-        <TechnicalProfile Id="Return-MFA-Method-Incorrect-Error">
-          <DisplayName>Return OAuth2 error</DisplayName>
-          <Protocol Name="None" />
-          <OutputTokenFormat>OAuth2Error</OutputTokenFormat>
-          <CryptographicKeys>
-            <Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
-          </CryptographicKeys>
-          <InputClaims>
-            <InputClaim ClaimTypeReferenceId="errorCode" />
-            <InputClaim ClaimTypeReferenceId="errorMessage" />
-          </InputClaims>
-        </TechnicalProfile>
-      </TechnicalProfiles>
-    </ClaimsProvider>
-	
-	<ClaimsProvider>
-      <DisplayName>Conditional Access</DisplayName>
-      <TechnicalProfiles>
-        <TechnicalProfile Id="ConditionalAccessEvaluation">
-          <DisplayName>Conditional Access Provider</DisplayName>
-          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ConditionalAccessProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
-          <Metadata>
-            <Item Key="OperationType">Evaluation</Item>
-          </Metadata>
-          <InputClaimsTransformations>
-            <InputClaimsTransformation ReferenceId="IsMfaRegisteredCT" />
-          </InputClaimsTransformations>
-          <InputClaims>
-            <InputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="UserId" />
-            <InputClaim ClaimTypeReferenceId="AuthenticationMethodsUsed" />
-            <InputClaim ClaimTypeReferenceId="IsFederated" DefaultValue="false" />
-            <InputClaim ClaimTypeReferenceId="IsMfaRegistered" />
-          </InputClaims>
-          <OutputClaims>
-            <OutputClaim ClaimTypeReferenceId="conditionalAccessClaimCollection" PartnerClaimType="Challenges" />
-            <OutputClaim ClaimTypeReferenceId="ConditionalAccessStatus" PartnerClaimType="MultiConditionalAccessStatus" />
-          </OutputClaims>
-        </TechnicalProfile>
-        <TechnicalProfile Id="ConditionalAccessRemediation">
-          <DisplayName>Conditional Access Remediation</DisplayName>
-          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ConditionalAccessProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
-          <Metadata>
-            <Item Key="OperationType">Remediation</Item>
-          </Metadata>
-          <InputClaims>
-            <InputClaim ClaimTypeReferenceId="conditionalAccessClaimCollection" PartnerClaimType="ChallengesSatisfied" />
-          </InputClaims>
-        </TechnicalProfile>
-        <TechnicalProfile Id="GenerateCAClaimFlags">
-          <DisplayName>GenerateCAClaimFlags</DisplayName>
-          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
-          <OutputClaims>
-            <OutputClaim ClaimTypeReferenceId="CAChallengeIsMfa" />
-            <OutputClaim ClaimTypeReferenceId="CAChallengeIsChgPwd" />
-            <OutputClaim ClaimTypeReferenceId="CAChallengeIsBlock" />
-          </OutputClaims>
-          <OutputClaimsTransformations>
-            <OutputClaimsTransformation ReferenceId="SetCAChallengeIsMfa" />
-            <OutputClaimsTransformation ReferenceId="SetCAChallengeIsChgPwd" />
-            <OutputClaimsTransformation ReferenceId="SetCAChallengeIsBlock" />
-          </OutputClaimsTransformations>
-        </TechnicalProfile>
-      </TechnicalProfiles>
-    </ClaimsProvider>
-	
-  </ClaimsProviders>
-  <UserJourneys>
-    <UserJourney Id="SignUpOrSignInWithForcePasswordReset" DefaultCpimIssuerTechnicalProfileReferenceId="JwtIssuer">
-      <OrchestrationSteps>
-        <OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
-          <ClaimsProviderSelections>
-            <ClaimsProviderSelection ValidationClaimsExchangeId="LocalAccountSigninEmailExchange" />
-            <ClaimsProviderSelection TargetClaimsExchangeId="ForgotPasswordExchange" />
-			<ClaimsProviderSelection TargetClaimsExchangeId="AzureADOrgExchange" />
-          </ClaimsProviderSelections>
-          <ClaimsExchanges>
-            <ClaimsExchange Id="LocalAccountSigninEmailExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Email" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-        <!-- Check if the user has selected to sign in using one of the social providers -->
-        <OrchestrationStep Order="2" Type="ClaimsExchange">
-          <Preconditions>
-            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
-              <Value>objectId</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-          </Preconditions>
-          <ClaimsExchanges>
-            <ClaimsExchange Id="SignUpWithLogonEmailExchange" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonEmail" />
-            <ClaimsExchange Id="ForgotPasswordExchange" TechnicalProfileReferenceId="ForgotPassword" />
-			<ClaimsExchange Id="AzureADOrgExchange" TechnicalProfileReferenceId="AADOrg-OpenIdConnect" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-        <OrchestrationStep Order="3" Type="InvokeSubJourney">
-          <Preconditions>
-            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-              <Value>isForgotPassword</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-          </Preconditions>
-          <JourneyList>
-            <Candidate SubJourneyReferenceId="PasswordReset" />
-          </JourneyList>
-        </OrchestrationStep>
-        <!-- This step reads any user attributes that we may not have received when authenticating using ESTS so they can be sent 
+		<ClaimsProvider>
+			<DisplayName>OAuth2 Error TPs</DisplayName>
+			<TechnicalProfiles>
+				<TechnicalProfile Id="Return-MFA-Method-Incorrect-Error">
+					<DisplayName>Return OAuth2 error</DisplayName>
+					<Protocol Name="None"/>
+					<OutputTokenFormat>OAuth2Error</OutputTokenFormat>
+					<CryptographicKeys>
+						<Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer"/>
+					</CryptographicKeys>
+					<InputClaims>
+						<InputClaim ClaimTypeReferenceId="errorCode"/>
+						<InputClaim ClaimTypeReferenceId="errorMessage"/>
+					</InputClaims>
+				</TechnicalProfile>
+			</TechnicalProfiles>
+		</ClaimsProvider>
+		<ClaimsProvider>
+			<DisplayName>Conditional Access</DisplayName>
+			<TechnicalProfiles>
+				<TechnicalProfile Id="ConditionalAccessEvaluation">
+					<DisplayName>Conditional Access Provider</DisplayName>
+					<Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ConditionalAccessProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+					<Metadata>
+						<Item Key="OperationType">Evaluation</Item>
+					</Metadata>
+					<InputClaimsTransformations>
+						<InputClaimsTransformation ReferenceId="IsMfaRegisteredCT"/>
+					</InputClaimsTransformations>
+					<InputClaims>
+						<InputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="UserId"/>
+						<InputClaim ClaimTypeReferenceId="AuthenticationMethodsUsed"/>
+						<InputClaim ClaimTypeReferenceId="IsFederated" DefaultValue="false"/>
+						<InputClaim ClaimTypeReferenceId="IsMfaRegistered"/>
+					</InputClaims>
+					<OutputClaims>
+						<OutputClaim ClaimTypeReferenceId="conditionalAccessClaimCollection" PartnerClaimType="Challenges"/>
+						<OutputClaim ClaimTypeReferenceId="ConditionalAccessStatus" PartnerClaimType="MultiConditionalAccessStatus"/>
+					</OutputClaims>
+				</TechnicalProfile>
+				<TechnicalProfile Id="ConditionalAccessRemediation">
+					<DisplayName>Conditional Access Remediation</DisplayName>
+					<Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ConditionalAccessProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+					<Metadata>
+						<Item Key="OperationType">Remediation</Item>
+					</Metadata>
+					<InputClaims>
+						<InputClaim ClaimTypeReferenceId="conditionalAccessClaimCollection" PartnerClaimType="ChallengesSatisfied"/>
+					</InputClaims>
+				</TechnicalProfile>
+				<TechnicalProfile Id="GenerateCAClaimFlags">
+					<DisplayName>GenerateCAClaimFlags</DisplayName>
+					<Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+					<OutputClaims>
+						<OutputClaim ClaimTypeReferenceId="CAChallengeIsMfa"/>
+						<OutputClaim ClaimTypeReferenceId="CAChallengeIsChgPwd"/>
+						<OutputClaim ClaimTypeReferenceId="CAChallengeIsBlock"/>
+					</OutputClaims>
+					<OutputClaimsTransformations>
+						<OutputClaimsTransformation ReferenceId="SetCAChallengeIsMfa"/>
+						<OutputClaimsTransformation ReferenceId="SetCAChallengeIsChgPwd"/>
+						<OutputClaimsTransformation ReferenceId="SetCAChallengeIsBlock"/>
+					</OutputClaimsTransformations>
+				</TechnicalProfile>
+			</TechnicalProfiles>
+		</ClaimsProvider>
+	</ClaimsProviders>
+	<UserJourneys>
+		<UserJourney Id="SignUpOrSignInWithForcePasswordReset" DefaultCpimIssuerTechnicalProfileReferenceId="JwtIssuer">
+			<OrchestrationSteps>
+				<OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
+					<ClaimsProviderSelections>
+						<ClaimsProviderSelection ValidationClaimsExchangeId="LocalAccountSigninEmailExchange"/>
+						<ClaimsProviderSelection TargetClaimsExchangeId="ForgotPasswordExchange"/>
+						<ClaimsProviderSelection TargetClaimsExchangeId="AzureADOrgExchange"/>
+					</ClaimsProviderSelections>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="LocalAccountSigninEmailExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Email"/>
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<!-- Check if the user has selected to sign in using one of the social providers -->
+				<OrchestrationStep Order="2" Type="ClaimsExchange">
+					<Preconditions>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+							<Value>objectId</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="SignUpWithLogonEmailExchange" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonEmail"/>
+						<ClaimsExchange Id="ForgotPasswordExchange" TechnicalProfileReferenceId="ForgotPassword"/>
+						<ClaimsExchange Id="AzureADOrgExchange" TechnicalProfileReferenceId="AADOrg-OpenIdConnect"/>
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<OrchestrationStep Order="3" Type="InvokeSubJourney">
+					<Preconditions>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+							<Value>isForgotPassword</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<JourneyList>
+						<Candidate SubJourneyReferenceId="PasswordReset"/>
+					</JourneyList>
+				</OrchestrationStep>
+				<!-- This step reads any user attributes that we may not have received when authenticating using ESTS so they can be sent 
           in the token. -->
-        <OrchestrationStep Order="4" Type="ClaimsExchange">
-          <Preconditions>
-            <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-              <Value>authenticationSource</Value>
-              <Value>socialIdpAuthentication</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-          </Preconditions>
-          <ClaimsExchanges>
-            <ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-     
-        <!--Demo: check if change password is required. If yes, ask the user to reset the password-->
-        <OrchestrationStep Order="5" Type="ClaimsExchange">
-          <Preconditions>
-            <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-              <Value>authenticationSource</Value>
-              <Value>socialIdpAuthentication</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-              <Value>extension_requiresMigration</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-            <Precondition Type="ClaimEquals" ExecuteActionsIf="false">
-              <Value>extension_requiresMigration</Value>
-              <Value>True</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-          </Preconditions>
-          <ClaimsExchanges>
-            <ClaimsExchange Id="NewCredentials" TechnicalProfileReferenceId="LocalAccountWritePasswordUsingObjectId" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-        <!--Demo: check if change password is required. If yes remove the value of the extension attribute. 
+				<OrchestrationStep Order="4" Type="ClaimsExchange">
+					<Preconditions>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+							<Value>authenticationSource</Value>
+							<Value>socialIdpAuthentication</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId"/>
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<!--Demo: check if change password is required. If yes, ask the user to reset the password-->
+				<OrchestrationStep Order="5" Type="ClaimsExchange">
+					<Preconditions>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+							<Value>authenticationSource</Value>
+							<Value>socialIdpAuthentication</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+							<Value>extension_requiresMigration</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+							<Value>extension_requiresMigration</Value>
+							<Value>True</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="NewCredentials" TechnicalProfileReferenceId="LocalAccountWritePasswordUsingObjectId"/>
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<!--Demo: check if change password is required. If yes remove the value of the extension attribute. 
               So, on the next time user dons' t need to update the password-->
-        <OrchestrationStep Order="6" Type="ClaimsExchange">
-          <Preconditions>
-            <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-              <Value>authenticationSource</Value>
-              <Value>socialIdpAuthentication</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-              <Value>extension_requiresMigration</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-            <Precondition Type="ClaimEquals" ExecuteActionsIf="false">
-              <Value>extension_requiresMigration</Value>
-              <Value>True</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-          </Preconditions>
-          <ClaimsExchanges>
-            <ClaimsExchange Id="AADUserRemoveMustResetPasswordUsingObjectId" TechnicalProfileReferenceId="AAD-UserRemoveMustResetPasswordUsingObjectId" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-		
-		 <!-- Conditional access evaluation-->
-        <OrchestrationStep Order="7" Type="InvokeSubJourney">
-          <Preconditions>
-            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
-              <Value>isLocalAccountSignUp</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-			<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-              <Value>authenticationSource</Value>
-              <Value>socialIdpAuthentication</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-			<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-              <Value>extension_requiresMFA</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-			<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
-              <Value>extension_requiresMFA</Value>
-			  <Value>True</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-              <Value>extension_mfaByPhoneOrEmail</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-          </Preconditions>
-          <JourneyList>
-            <Candidate SubJourneyReferenceId="ConditionalAccess_Evaluation" />
-          </JourneyList>
-        </OrchestrationStep>
-		
-		<OrchestrationStep Order="8" Type="InvokeSubJourney">
-          <Preconditions>
-			<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-              <Value>authenticationSource</Value>
-              <Value>socialIdpAuthentication</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-			<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-              <Value>extension_requiresMFA</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-			<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
-              <Value>extension_requiresMFA</Value>
-			  <Value>True</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
-              <Value>extension_mfaByPhoneOrEmail</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-          </Preconditions>
-          <JourneyList>
-            <Candidate SubJourneyReferenceId="MFA-UserSelectionAndVerification" />
-          </JourneyList>
-        </OrchestrationStep>
-        <!-- Throw error if control was bypassed -->
-        <OrchestrationStep Order="9" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="Return-MFA-Method-Incorrect-Error">
-          <Preconditions>
-		    <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-              <Value>authenticationSource</Value>
-              <Value>socialIdpAuthentication</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-			<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-              <Value>extension_requiresMFA</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-			<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
-              <Value>extension_requiresMFA</Value>
-			  <Value>True</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-            <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-              <Value>extension_mfaByPhoneOrEmail</Value>
-              <Value>email</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-            <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-              <Value>extension_mfaByPhoneOrEmail</Value>
-              <Value>phone</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-          </Preconditions>
-        </OrchestrationStep>
-		<!-- Conditional access block user -->
-        <OrchestrationStep Order="10" Type="InvokeSubJourney">
-          <Preconditions>
-            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-              <Value>CAChallengeIsBlock</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-            <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-              <Value>CAChallengeIsBlock</Value>
-              <Value>False</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-          </Preconditions>
-          <JourneyList>
-            <Candidate SubJourneyReferenceId="BlockUser" />
-          </JourneyList>
-        </OrchestrationStep>
-		<OrchestrationStep Order="11" Type="InvokeSubJourney">
-          <Preconditions>
-            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-              <Value>CAChallengeIsMfa</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-            <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-              <Value>CAChallengeIsMfa</Value>
-              <Value>False</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-          </Preconditions>
-          <JourneyList>
-            <Candidate SubJourneyReferenceId="MFA-VerificationAndRemediation" />
-          </JourneyList>
-        </OrchestrationStep>
-        <OrchestrationStep Order="12" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
-      </OrchestrationSteps>
-      <ClientDefinition ReferenceId="DefaultWeb" />
-    </UserJourney>
-  </UserJourneys>
-  <SubJourneys>
-    <SubJourney Id="PasswordReset" Type="Call">
-      <OrchestrationSteps>
-        <!-- Validate user's email address. -->
-        <OrchestrationStep Order="1" Type="ClaimsExchange">
-          <ClaimsExchanges>
-            <ClaimsExchange Id="PasswordResetUsingEmailAddressExchange" TechnicalProfileReferenceId="LocalAccountDiscoveryUsingEmailAddress" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-        <!-- Collect and persist a new password. -->
-        <OrchestrationStep Order="2" Type="ClaimsExchange">
-          <ClaimsExchanges>
-            <ClaimsExchange Id="NewCredentials" TechnicalProfileReferenceId="LocalAccountWritePasswordUsingObjectId" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-      </OrchestrationSteps>
-    </SubJourney>
-	<SubJourney Id="ConditionalAccess_Evaluation" Type="Call">
-      <OrchestrationSteps>
-        <OrchestrationStep Order="1" Type="ClaimsExchange">
-          <ClaimsExchanges>
-            <ClaimsExchange Id="ConditionalAccessEvaluation" TechnicalProfileReferenceId="ConditionalAccessEvaluation" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-        <OrchestrationStep Order="2" Type="ClaimsExchange">
-          <Preconditions>
-            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-              <Value>conditionalAccessClaimCollection</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-          </Preconditions>
-          <ClaimsExchanges>
-            <ClaimsExchange Id="GenerateCAClaimFlags" TechnicalProfileReferenceId="GenerateCAClaimFlags" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-      </OrchestrationSteps>
-    </SubJourney>
-
-    <SubJourney Id="ConditionalAccess_Remediation" Type="Call">
-      <OrchestrationSteps>
-        <OrchestrationStep Order="1" Type="ClaimsExchange">
-          <Preconditions>
-            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-              <Value>conditionalAccessClaimCollection</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-          </Preconditions>
-          <ClaimsExchanges>
-            <ClaimsExchange Id="ConditionalAccessRemediation" TechnicalProfileReferenceId="ConditionalAccessRemediation" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-      </OrchestrationSteps>
-    </SubJourney>
-	<SubJourney Id="MFA-UserSelectionAndVerification" Type="Call">
-	<OrchestrationSteps>
-		<OrchestrationStep Order="1" Type="ClaimsExchange">
-          <ClaimsExchanges>
-            <ClaimsExchange Id="SelfAsserted-Select-MFA-Method" TechnicalProfileReferenceId="SelfAsserted-Select-MFA-Method" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-		<!-- <OrchestrationStep Order="2" Type="InvokeSubJourney"> -->
-          <!-- <JourneyList> -->
-            <!-- <Candidate SubJourneyReferenceId="MFA-UserVerification" /> -->
-          <!-- </JourneyList> -->
-        <!-- </OrchestrationStep> -->
-	</OrchestrationSteps>
-	</SubJourney>
-	<SubJourney Id="MFA-VerificationAndRemediation" Type="Call">
-	<OrchestrationSteps>
-		<OrchestrationStep Order="1" Type="InvokeSubJourney">
-          <JourneyList>
-            <Candidate SubJourneyReferenceId="MFA-UserVerification" />
-          </JourneyList>
-        </OrchestrationStep>
-		<OrchestrationStep Order="2" Type="InvokeSubJourney">
-          <JourneyList>
-            <Candidate SubJourneyReferenceId="ConditionalAccess_Remediation" />
-          </JourneyList>
-        </OrchestrationStep>
-	</OrchestrationSteps>
-	</SubJourney>
-	<SubJourney Id="MFA-UserVerification" Type="Call">
-      <OrchestrationSteps>
-        <!-- Phone verification: If MFA is not required, the next three steps (#5-#7) should be removed.
+				<OrchestrationStep Order="6" Type="ClaimsExchange">
+					<Preconditions>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+							<Value>authenticationSource</Value>
+							<Value>socialIdpAuthentication</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+							<Value>extension_requiresMigration</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+							<Value>extension_requiresMigration</Value>
+							<Value>True</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="AADUserRemoveMustResetPasswordUsingObjectId" TechnicalProfileReferenceId="AAD-UserRemoveMustResetPasswordUsingObjectId"/>
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<!-- Conditional access evaluation-->
+				<OrchestrationStep Order="7" Type="InvokeSubJourney">
+					<Preconditions>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+							<Value>isLocalAccountSignUp</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+							<Value>authenticationSource</Value>
+							<Value>socialIdpAuthentication</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+							<Value>extension_requiresMFA</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+							<Value>extension_requiresMFA</Value>
+							<Value>True</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+							<Value>extension_mfaByPhoneOrEmail</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<JourneyList>
+						<Candidate SubJourneyReferenceId="ConditionalAccess_Evaluation"/>
+					</JourneyList>
+				</OrchestrationStep>
+				<OrchestrationStep Order="8" Type="InvokeSubJourney">
+					<Preconditions>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+							<Value>authenticationSource</Value>
+							<Value>socialIdpAuthentication</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+							<Value>extension_requiresMFA</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+							<Value>extension_requiresMFA</Value>
+							<Value>True</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+							<Value>extension_mfaByPhoneOrEmail</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<JourneyList>
+						<Candidate SubJourneyReferenceId="MFA-UserSelectionAndVerification"/>
+					</JourneyList>
+				</OrchestrationStep>
+				<!-- Throw error if control was bypassed -->
+				<OrchestrationStep Order="9" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="Return-MFA-Method-Incorrect-Error">
+					<Preconditions>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+							<Value>authenticationSource</Value>
+							<Value>socialIdpAuthentication</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+							<Value>extension_requiresMFA</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+							<Value>extension_requiresMFA</Value>
+							<Value>True</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+							<Value>extension_mfaByPhoneOrEmail</Value>
+							<Value>email</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+							<Value>extension_mfaByPhoneOrEmail</Value>
+							<Value>phone</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+				</OrchestrationStep>
+				<!-- Conditional access block user -->
+				<OrchestrationStep Order="10" Type="InvokeSubJourney">
+					<Preconditions>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+							<Value>CAChallengeIsBlock</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+							<Value>CAChallengeIsBlock</Value>
+							<Value>False</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<JourneyList>
+						<Candidate SubJourneyReferenceId="BlockUser"/>
+					</JourneyList>
+				</OrchestrationStep>
+				<OrchestrationStep Order="11" Type="InvokeSubJourney">
+					<Preconditions>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+							<Value>CAChallengeIsMfa</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+							<Value>CAChallengeIsMfa</Value>
+							<Value>False</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<JourneyList>
+						<Candidate SubJourneyReferenceId="MFA-VerificationAndRemediation"/>
+					</JourneyList>
+				</OrchestrationStep>
+				<OrchestrationStep Order="12" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer"/>
+			</OrchestrationSteps>
+			<ClientDefinition ReferenceId="DefaultWeb"/>
+		</UserJourney>
+	</UserJourneys>
+	<SubJourneys>
+		<SubJourney Id="PasswordReset" Type="Call">
+			<OrchestrationSteps>
+				<!-- Validate user's email address. -->
+				<OrchestrationStep Order="1" Type="ClaimsExchange">
+					<ClaimsExchanges>
+						<ClaimsExchange Id="PasswordResetUsingEmailAddressExchange" TechnicalProfileReferenceId="LocalAccountDiscoveryUsingEmailAddress"/>
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<!-- Collect and persist a new password. -->
+				<OrchestrationStep Order="2" Type="ClaimsExchange">
+					<ClaimsExchanges>
+						<ClaimsExchange Id="NewCredentials" TechnicalProfileReferenceId="LocalAccountWritePasswordUsingObjectId"/>
+					</ClaimsExchanges>
+				</OrchestrationStep>
+			</OrchestrationSteps>
+		</SubJourney>
+		<SubJourney Id="ConditionalAccess_Evaluation" Type="Call">
+			<OrchestrationSteps>
+				<OrchestrationStep Order="1" Type="ClaimsExchange">
+					<ClaimsExchanges>
+						<ClaimsExchange Id="ConditionalAccessEvaluation" TechnicalProfileReferenceId="ConditionalAccessEvaluation"/>
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<OrchestrationStep Order="2" Type="ClaimsExchange">
+					<Preconditions>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+							<Value>conditionalAccessClaimCollection</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="GenerateCAClaimFlags" TechnicalProfileReferenceId="GenerateCAClaimFlags"/>
+					</ClaimsExchanges>
+				</OrchestrationStep>
+			</OrchestrationSteps>
+		</SubJourney>
+		<SubJourney Id="ConditionalAccess_Remediation" Type="Call">
+			<OrchestrationSteps>
+				<OrchestrationStep Order="1" Type="ClaimsExchange">
+					<Preconditions>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+							<Value>conditionalAccessClaimCollection</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="ConditionalAccessRemediation" TechnicalProfileReferenceId="ConditionalAccessRemediation"/>
+					</ClaimsExchanges>
+				</OrchestrationStep>
+			</OrchestrationSteps>
+		</SubJourney>
+		<SubJourney Id="MFA-UserSelectionAndVerification" Type="Call">
+			<OrchestrationSteps>
+				<OrchestrationStep Order="1" Type="ClaimsExchange">
+					<ClaimsExchanges>
+						<ClaimsExchange Id="SelfAsserted-Select-MFA-Method" TechnicalProfileReferenceId="SelfAsserted-Select-MFA-Method"/>
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<!-- <OrchestrationStep Order="2" Type="InvokeSubJourney"> -->
+				<!-- <JourneyList> -->
+				<!-- <Candidate SubJourneyReferenceId="MFA-UserVerification" /> -->
+				<!-- </JourneyList> -->
+				<!-- </OrchestrationStep> -->
+			</OrchestrationSteps>
+		</SubJourney>
+		<SubJourney Id="MFA-VerificationAndRemediation" Type="Call">
+			<OrchestrationSteps>
+				<OrchestrationStep Order="1" Type="InvokeSubJourney">
+					<JourneyList>
+						<Candidate SubJourneyReferenceId="MFA-UserVerification"/>
+					</JourneyList>
+				</OrchestrationStep>
+				<OrchestrationStep Order="2" Type="InvokeSubJourney">
+					<JourneyList>
+						<Candidate SubJourneyReferenceId="ConditionalAccess_Remediation"/>
+					</JourneyList>
+				</OrchestrationStep>
+			</OrchestrationSteps>
+		</SubJourney>
+		<SubJourney Id="MFA-UserVerification" Type="Call">
+			<OrchestrationSteps>
+				<!-- Phone verification: If MFA is not required, the next three steps (#5-#7) should be removed.
              This step checks whether there's a phone number on record,  for the user. If found, then the user is challenged to verify it. -->
-        <OrchestrationStep Order="1" Type="ClaimsExchange">
-          <Preconditions>
-		    <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-              <Value>authenticationSource</Value>
-              <Value>socialIdpAuthentication</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-			<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-              <Value>extension_requiresMFA</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-			<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
-              <Value>extension_requiresMFA</Value>
-			  <Value>True</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
-              <Value>isActiveMFASession</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-            <!--Sample: If the preferred MFA method is not 'phone' skip this orchestration step-->
-            <Precondition Type="ClaimEquals" ExecuteActionsIf="false">
-              <Value>extension_mfaByPhoneOrEmail</Value>
-              <Value>phone</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-          </Preconditions>
-          <ClaimsExchanges>
-            <ClaimsExchange Id="PhoneFactor-Verify" TechnicalProfileReferenceId="PhoneFactor-InputOrVerify" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-        <!-- Save MFA phone number: The precondition verifies whether the user provided a new number in the 
+				<OrchestrationStep Order="1" Type="ClaimsExchange">
+					<Preconditions>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+							<Value>authenticationSource</Value>
+							<Value>socialIdpAuthentication</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+							<Value>extension_requiresMFA</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+							<Value>extension_requiresMFA</Value>
+							<Value>True</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+							<Value>isActiveMFASession</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<!--Sample: If the preferred MFA method is not 'phone' skip this orchestration step-->
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+							<Value>extension_mfaByPhoneOrEmail</Value>
+							<Value>phone</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="PhoneFactor-Verify" TechnicalProfileReferenceId="PhoneFactor-InputOrVerify"/>
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<!-- Save MFA phone number: The precondition verifies whether the user provided a new number in the 
              previous step. If so, then the phone number is stored in the directory for future authentication 
              requests. -->
-        <OrchestrationStep Order="2" Type="ClaimsExchange">
-          <Preconditions>
-		              <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-              <Value>authenticationSource</Value>
-              <Value>socialIdpAuthentication</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
+				<OrchestrationStep Order="2" Type="ClaimsExchange">
+					<Preconditions>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+							<Value>authenticationSource</Value>
+							<Value>socialIdpAuthentication</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
 						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-              <Value>extension_requiresMFA</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-			<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
-              <Value>extension_requiresMFA</Value>
-			  <Value>True</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-              <Value>newPhoneNumberEntered</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-          </Preconditions>
-          <ClaimsExchanges>
-            <ClaimsExchange Id="AADUserWriteWithObjectId" TechnicalProfileReferenceId="AAD-UserWritePhoneNumberUsingObjectId" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-        <!--Sample: MFA with email-->
-        <OrchestrationStep Order="3" Type="ClaimsExchange">
-          <Preconditions>
-		              <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-              <Value>authenticationSource</Value>
-              <Value>socialIdpAuthentication</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
+							<Value>extension_requiresMFA</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+							<Value>extension_requiresMFA</Value>
+							<Value>True</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
 						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-              <Value>extension_requiresMFA</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-			<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
-              <Value>extension_requiresMFA</Value>
-			  <Value>True</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-            <Precondition Type="ClaimEquals" ExecuteActionsIf="false">
-              <Value>extension_mfaByPhoneOrEmail</Value>
-              <Value>email</Value>
-              <Action>SkipThisOrchestrationStep</Action>
-            </Precondition>
-          </Preconditions>
-          <ClaimsExchanges>
-            <ClaimsExchange Id="Email-Verify" TechnicalProfileReferenceId="EmailVerifyOnSignIn" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-      </OrchestrationSteps>
-    </SubJourney>
-	
-	<SubJourney Id="BlockUser" Type="Call">
-      <OrchestrationSteps>
-        <OrchestrationStep Order="1" Type="ClaimsExchange">
-          <ClaimsExchanges>
-            <ClaimsExchange Id="ShowBlockPage" TechnicalProfileReferenceId="ShowBlockPage" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-      </OrchestrationSteps>
-    </SubJourney>
-
-  </SubJourneys>
+							<Value>newPhoneNumberEntered</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="AADUserWriteWithObjectId" TechnicalProfileReferenceId="AAD-UserWritePhoneNumberUsingObjectId"/>
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<!--Sample: MFA with email-->
+				<OrchestrationStep Order="3" Type="ClaimsExchange">
+					<Preconditions>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+							<Value>authenticationSource</Value>
+							<Value>socialIdpAuthentication</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+							<Value>extension_requiresMFA</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+							<Value>extension_requiresMFA</Value>
+							<Value>True</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+							<Value>extension_mfaByPhoneOrEmail</Value>
+							<Value>email</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="Email-Verify" TechnicalProfileReferenceId="EmailVerifyOnSignIn"/>
+					</ClaimsExchanges>
+				</OrchestrationStep>
+			</OrchestrationSteps>
+		</SubJourney>
+		<SubJourney Id="BlockUser" Type="Call">
+			<OrchestrationSteps>
+				<OrchestrationStep Order="1" Type="ClaimsExchange">
+					<ClaimsExchanges>
+						<ClaimsExchange Id="ShowBlockPage" TechnicalProfileReferenceId="ShowBlockPage"/>
+					</ClaimsExchanges>
+				</OrchestrationStep>
+			</OrchestrationSteps>
+		</SubJourney>
+	</SubJourneys>
 </TrustFrameworkPolicy>
