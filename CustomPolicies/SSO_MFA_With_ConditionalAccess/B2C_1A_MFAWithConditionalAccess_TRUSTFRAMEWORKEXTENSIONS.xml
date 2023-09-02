@@ -177,7 +177,7 @@
 				<DataType>boolean</DataType>
 				<UserHelpText>Specifies whether user must do MFA after login</UserHelpText>
 			</ClaimType>
-			<ClaimType Id="extension_mfaByPhoneOrEmail">
+			<ClaimType Id="extension_mfaOptions">
 				<DisplayName>Please select your preferred MFA method</DisplayName>
 				<DataType>string</DataType>
 				<UserInputType>RadioSingleSelect</UserInputType>
@@ -303,7 +303,7 @@
 						<InputClaimsTransformation ReferenceId="generateErrorMessage"/>
 					</InputClaimsTransformations>
 					<OutputClaims>
-						<OutputClaim ClaimTypeReferenceId="extension_mfaByPhoneOrEmail" Required="true"/>
+						<OutputClaim ClaimTypeReferenceId="extension_mfaOptions" Required="true"/>
 					</OutputClaims>
 				</TechnicalProfile>
 				<TechnicalProfile Id="EmailVerifyOnSignIn">
@@ -356,7 +356,7 @@
 					<OutputClaims>
 						<!-- Read the 'reset password' extension attribute -->
 						<OutputClaim ClaimTypeReferenceId="extension_requiresMigration"/>
-						<OutputClaim ClaimTypeReferenceId="extension_mfaByPhoneOrEmail"/>
+						<OutputClaim ClaimTypeReferenceId="extension_mfaOptions"/>
 						<OutputClaim ClaimTypeReferenceId="extension_requiresMFA"/>
 					</OutputClaims>
 				</TechnicalProfile>
@@ -385,7 +385,7 @@
 						<!-- Required claims -->
 						<PersistedClaim ClaimTypeReferenceId="objectId"/>
 						<PersistedClaim ClaimTypeReferenceId="userPrincipalName"/>
-						<PersistedClaim ClaimTypeReferenceId="extension_mfaByPhoneOrEmail"/>
+						<PersistedClaim ClaimTypeReferenceId="extension_mfaOptions"/>
 						<PersistedClaim ClaimTypeReferenceId="displayName"/>
 					</PersistedClaims>
 					<IncludeTechnicalProfile ReferenceId="AAD-Common"/>
@@ -394,13 +394,13 @@
 				<TechnicalProfile Id="AAD-UserWritePhoneNumberUsingObjectId">
 					<PersistedClaims>
 						<!--Sample: Add the MFA preferred method to the persisted claims collection -->
-						<PersistedClaim ClaimTypeReferenceId="extension_mfaByPhoneOrEmail"/>
+						<PersistedClaim ClaimTypeReferenceId="extension_mfaOptions"/>
 					</PersistedClaims>
 				</TechnicalProfile>
 				<TechnicalProfile Id="AAD-UserReadUsingAlternativeSecurityId">
 					<OutputClaims>
 						<!--Sample: Read the MFA preferred method-->
-						<OutputClaim ClaimTypeReferenceId="extension_mfaByPhoneOrEmail"/>
+						<OutputClaim ClaimTypeReferenceId="extension_mfaOptions"/>
 					</OutputClaims>
 				</TechnicalProfile>
 				<!--Demo: to create the extension attribute extension_mustResetPassword, you should upload the policy 
@@ -662,7 +662,7 @@
 							<Action>SkipThisOrchestrationStep</Action>
 						</Precondition>
 						<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-							<Value>extension_mfaByPhoneOrEmail</Value>
+							<Value>extension_mfaOptions</Value>
 							<Action>SkipThisOrchestrationStep</Action>
 						</Precondition>
 					</Preconditions>
@@ -687,7 +687,7 @@
 							<Action>SkipThisOrchestrationStep</Action>
 						</Precondition>
 						<Precondition Type="ClaimsExist" ExecuteActionsIf="true">
-							<Value>extension_mfaByPhoneOrEmail</Value>
+							<Value>extension_mfaOptions</Value>
 							<Action>SkipThisOrchestrationStep</Action>
 						</Precondition>
 					</Preconditions>
@@ -713,12 +713,12 @@
 							<Action>SkipThisOrchestrationStep</Action>
 						</Precondition>
 						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-							<Value>extension_mfaByPhoneOrEmail</Value>
+							<Value>extension_mfaOptions</Value>
 							<Value>email</Value>
 							<Action>SkipThisOrchestrationStep</Action>
 						</Precondition>
 						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-							<Value>extension_mfaByPhoneOrEmail</Value>
+							<Value>extension_mfaOptions</Value>
 							<Value>phone</Value>
 							<Action>SkipThisOrchestrationStep</Action>
 						</Precondition>
@@ -868,7 +868,7 @@
 						</Precondition>
 						<!--Sample: If the preferred MFA method is not 'phone' skip this orchestration step-->
 						<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
-							<Value>extension_mfaByPhoneOrEmail</Value>
+							<Value>extension_mfaOptions</Value>
 							<Value>phone</Value>
 							<Action>SkipThisOrchestrationStep</Action>
 						</Precondition>
@@ -923,7 +923,7 @@
 							<Action>SkipThisOrchestrationStep</Action>
 						</Precondition>
 						<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
-							<Value>extension_mfaByPhoneOrEmail</Value>
+							<Value>extension_mfaOptions</Value>
 							<Value>email</Value>
 							<Action>SkipThisOrchestrationStep</Action>
 						</Precondition>
