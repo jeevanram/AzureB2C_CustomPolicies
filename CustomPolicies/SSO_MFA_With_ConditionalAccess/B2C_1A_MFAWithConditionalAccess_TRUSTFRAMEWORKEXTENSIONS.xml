@@ -403,6 +403,103 @@
 				</OutputClaims>
 			</ClaimsTransformation>
 		</ClaimsTransformations>
+		<ContentDefinitions>
+      <ContentDefinition Id="api.selfasserted.totp">
+        <LoadUri>~/tenant/templates/AzureBlue/selfAsserted.cshtml</LoadUri>
+        <RecoveryUri>~/common/default_page_error.html</RecoveryUri>
+        <DataUri>urn:com:microsoft:aad:b2c:elements:contract:selfasserted:2.1.9</DataUri>
+        <Metadata>
+          <Item Key="DisplayName">Collect information from user page</Item>
+        </Metadata>
+        <LocalizedResourcesReferences>
+          <LocalizedResourcesReference Language="en" LocalizedResourcesReferenceId="api.selfasserted.totp.en" />
+        </LocalizedResourcesReferences>
+      </ContentDefinition>
+    </ContentDefinitions>
+
+    <Localization>
+      <!-- TOTP localized strings (English) -->
+      <LocalizedResources Id="api.selfasserted.totp.en">
+        <LocalizedStrings>
+          <LocalizedString ElementType="DisplayControl" ElementId="authenticatorAppIconControl" StringId="title_text">Download the Microsoft Authenticator using the download links for iOS and Android or use any other authenticator app of your choice.</LocalizedString>
+          <LocalizedString ElementType="DisplayControl" ElementId="authenticatorAppIconControl" StringId="instruction_text">Once you&#39;ve downloaded the Authenticator app, you can use any of the methods below to continue with enrollment.</LocalizedString>
+          <LocalizedString ElementType="ClaimType" ElementId="QrCodeScanInstruction" StringId="DisplayName">Once you've downloaded the Authenticator app, you can use any of the methods below to continue with enrollment.</LocalizedString>
+          <LocalizedString ElementType="DisplayControl" ElementId="totpQrCodeControl" StringId="title_text">Scan the QR code</LocalizedString>
+          <LocalizedString ElementType="DisplayControl" ElementId="totpQrCodeControl" StringId="info_msg">You can download the Microsoft Authenticator app or use any other authenticator app of your choice.</LocalizedString>
+          <LocalizedString ElementType="DisplayControl" ElementId="totpQrCodeControl" StringId="link_text">Can&#39;t scan? Try this</LocalizedString>
+          <LocalizedString ElementType="DisplayControl" ElementId="authenticatorInfoControl" StringId="title_text">Enter the account details manually</LocalizedString>
+          <LocalizedString ElementType="DisplayControl" ElementId="authenticatorInfoControl" StringId="account_name">Account Name:</LocalizedString>
+          <LocalizedString ElementType="DisplayControl" ElementId="authenticatorInfoControl" StringId="display_prefix">Secret</LocalizedString>
+          <LocalizedString ElementType="DisplayControl" ElementId="authenticatorInfoControl" StringId="collapse_text">Still having trouble?</LocalizedString>
+
+          <!-- Verification -->
+          <LocalizedString ElementType="ClaimType" ElementId="QrCodeVerifyInstruction" StringId="DisplayName">Enter the verification code from your authenticator app​.</LocalizedString>
+          <LocalizedString ElementType="ClaimType" ElementId="otpCode" StringId="DisplayName">Enter your code.</LocalizedString>
+          <!-- <LocalizedString ElementType="UxElement" StringId="button_continue">Verify</LocalizedString> -->
+        </LocalizedStrings>
+      </LocalizedResources>
+    </Localization>
+	 
+	 <DisplayControls>
+      <DisplayControl Id="emailVerificationControl" UserInterfaceControlType="VerificationControl">
+        <InputClaims>
+          <InputClaim ClaimTypeReferenceId="emailAddress" />
+        </InputClaims>
+        <DisplayClaims>
+          <DisplayClaim ClaimTypeReferenceId="emailAddress" ControlClaimType="Email" Required="true" />
+          <DisplayClaim ClaimTypeReferenceId="verificationCode" ControlClaimType="VerificationCode" Required="true" />
+        </DisplayClaims>
+        <OutputClaims>
+          <OutputClaim ClaimTypeReferenceId="azureMfaSessionId" />
+        </OutputClaims>
+        <Actions>
+          <Action Id="SendCode">
+            <ValidationClaimsExchange>
+              <ValidationClaimsExchangeTechnicalProfile TechnicalProfileReferenceId="AAD-UserReadUsingEmailAddress-emailAddress" ContinueOnError="false" />
+              <ValidationClaimsExchangeTechnicalProfile TechnicalProfileReferenceId="AadSspr-SendCode">
+                <Preconditions>
+                  <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+                    <Value>objectId</Value>
+                    <Action>SkipThisValidationTechnicalProfile</Action>
+                  </Precondition>
+                </Preconditions>
+              </ValidationClaimsExchangeTechnicalProfile>
+            </ValidationClaimsExchange>
+          </Action>
+          <Action Id="VerifyCode">
+            <ValidationClaimsExchange>
+              <ValidationClaimsExchangeTechnicalProfile TechnicalProfileReferenceId="AadSspr-VerifyCode" />
+            </ValidationClaimsExchange>
+          </Action>
+        </Actions>
+      </DisplayControl>
+	  
+	  <!-- Render the authenticator apps icon. -->
+      <DisplayControl Id="authenticatorAppIconControl" UserInterfaceControlType="AuthenticatorAppIconControl" />
+
+      <!-- Render the QR code. It takes the URI (qrCodeContent) input claim and renders it as a QR code-->
+      <DisplayControl Id="totpQrCodeControl" UserInterfaceControlType="QrCodeControl">
+        <InputClaims>
+          <InputClaim ClaimTypeReferenceId="qrCodeContent" />
+        </InputClaims>
+        <DisplayClaims>
+          <DisplayClaim ClaimTypeReferenceId="qrCodeContent" ControlClaimType="QrCodeContent" />
+        </DisplayClaims>
+      </DisplayControl>
+
+      <!-- Render the TOTP information. It takes the totpIdentifier and the secretKey input claims and renders as a plan text-->
+      <DisplayControl Id="authenticatorInfoControl" UserInterfaceControlType="AuthenticatorInfoControl">
+        <InputClaims>
+          <InputClaim ClaimTypeReferenceId="totpIdentifier" />
+          <InputClaim ClaimTypeReferenceId="secretKey" />
+        </InputClaims>
+        <DisplayClaims>
+          <DisplayClaim ClaimTypeReferenceId="totpIdentifier" />
+          <DisplayClaim ClaimTypeReferenceId="secretKey" />
+        </DisplayClaims>
+      </DisplayControl>
+	  
+    </DisplayControls>
 	</BuildingBlocks>
 	<ClaimsProviders>
 		<ClaimsProvider>
