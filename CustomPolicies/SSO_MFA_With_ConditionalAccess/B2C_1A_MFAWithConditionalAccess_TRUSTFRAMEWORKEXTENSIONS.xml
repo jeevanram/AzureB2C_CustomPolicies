@@ -1207,6 +1207,11 @@
 							<Value>phone</Value>
 							<Action>SkipThisOrchestrationStep</Action>
 						</Precondition>
+						<Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+					              <Value>extension_mfaOptions</Value>
+					              <Value>authapp</Value>
+					              <Action>SkipThisOrchestrationStep</Action>
+					            </Precondition>
 					</Preconditions>
 				</OrchestrationStep>
 				<!-- Conditional access block user -->
@@ -1264,6 +1269,20 @@
 				</OrchestrationStep>
 			</OrchestrationSteps>
 		</SubJourney>
+		<SubJourney Id="PasswordReset_Custom" Type="Call">
+		      <OrchestrationSteps>
+		        <OrchestrationStep Order="1" Type="ClaimsExchange">
+		          <ClaimsExchanges>
+		            <ClaimsExchange Id="PasswordResetUsingEmailAddressExchange" TechnicalProfileReferenceId="LocalAccountDiscoveryUsingEmailAddress-AcctExists" />
+		          </ClaimsExchanges>
+		        </OrchestrationStep>
+		        <OrchestrationStep Order="2" Type="ClaimsExchange">
+		          <ClaimsExchanges>
+		            <ClaimsExchange Id="NewCredentials" TechnicalProfileReferenceId="LocalAccountWritePasswordUsingObjectId" />
+		          </ClaimsExchanges>
+		        </OrchestrationStep>
+		      </OrchestrationSteps>
+		    </SubJourney>
 		<SubJourney Id="ConditionalAccess_Evaluation" Type="Call">
 			<OrchestrationSteps>
 				<OrchestrationStep Order="1" Type="ClaimsExchange">
@@ -1417,6 +1436,62 @@
 						<ClaimsExchange Id="Email-Verify" TechnicalProfileReferenceId="EmailVerifyOnSignIn"/>
 					</ClaimsExchanges>
 				</OrchestrationStep>
+				<!-- Call the TOTP enrollment ub journey. If user already enrolled the sub journey will not ask the user to enroll -->
+        <OrchestrationStep Order="4" Type="InvokeSubJourney">
+		  <Preconditions>
+		    <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+              <Value>authenticationSource</Value>
+              <Value>socialIdpAuthentication</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+			<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+              <Value>extension_requiresMFA</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+			<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+              <Value>extension_requiresMFA</Value>
+			  <Value>True</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+              <Value>extension_mfaOptions</Value>
+              <Value>authapp</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+		  <JourneyList>
+            <Candidate SubJourneyReferenceId="TotpFactor-Input" />
+          </JourneyList>
+		</OrchestrationStep>
+		
+		<!-- Call the TOTP validation sub journey-->
+        <OrchestrationStep Order="5" Type="InvokeSubJourney">
+		  <Preconditions>
+		    <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+              <Value>authenticationSource</Value>
+              <Value>socialIdpAuthentication</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+			<Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+              <Value>extension_requiresMFA</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+			<Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+              <Value>extension_requiresMFA</Value>
+			  <Value>True</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+              <Value>extension_mfaOptions</Value>
+              <Value>authapp</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+		  
+          <JourneyList>
+            <Candidate SubJourneyReferenceId="TotpFactor-Verify" />
+          </JourneyList>
+        </OrchestrationStep>
 			</OrchestrationSteps>
 		</SubJourney>
 		<SubJourney Id="BlockUser" Type="Call">
@@ -1428,5 +1503,285 @@
 				</OrchestrationStep>
 			</OrchestrationSteps>
 		</SubJourney>
+		
+    <!--TOTP subjourneys-->
+    <!-- Set the required claims numberOfAvailableDevices and totpIdentifier-->
+    <SubJourney Id="SetTotpInitialValue" Type="Call">
+      <OrchestrationSteps>
+
+        <!-- If number of available device claim not exists, set the value to 0-->
+        <OrchestrationStep Order="1" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+              <Value>numberOfAvailableDevices</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="SetTotpDefaultValue" TechnicalProfileReferenceId="SetTotpDefaultValue" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <!-- The following orchestration steps try to get the user identifier for different 
+             type of authentication, such as local and social account.-->
+        
+             <!-- Try to get the identifier from UserId-->
+        <OrchestrationStep Order="2" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+              <Value>totpIdentifier</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+              <Value>UserId</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="SetTotpIdentifierAsUserId" TechnicalProfileReferenceId="CreateTotpIdentifier-UserId" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <!-- Get the identifier from email-->
+        <OrchestrationStep Order="3" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+              <Value>totpIdentifier</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+              <Value>email</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="SetTotpIdentifierAsEmail" TechnicalProfileReferenceId="CreateTotpIdentifier-Email" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <!-- Get the identifier from the user's emails -->
+        <OrchestrationStep Order="4" Type="InvokeSubJourney">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+              <Value>totpIdentifier</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+              <Value>emails</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <JourneyList>
+            <Candidate SubJourneyReferenceId="ExtractEmailFromEmailsForTotpIdentifier" />
+          </JourneyList>
+        </OrchestrationStep>
+        
+        <!-- Get the identifier from local account sign-in name-->
+        <OrchestrationStep Order="5" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+              <Value>totpIdentifier</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+              <Value>signInName</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="SetTotpIdentifierAsSignInName" TechnicalProfileReferenceId="CreateTotpIdentifier-SignInName" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+      </OrchestrationSteps>
+    </SubJourney>
+
+    <!-- Get the identifier from the user's emails -->
+    <SubJourney Id="ExtractEmailFromEmailsForTotpIdentifier" Type="Call">
+      <OrchestrationSteps>
+        <OrchestrationStep Order="1" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+              <Value>emails</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="GetEmailAddress" TechnicalProfileReferenceId="GetEmailAddress" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+        <OrchestrationStep Order="2" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+              <Value>ReadOnlyEmail</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="GetEmailFromReadOnlyEmail" TechnicalProfileReferenceId="GetEmailFromReadOnlyEmail" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+        <OrchestrationStep Order="3" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+              <Value>email</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="SetTotpIdentifierAsEmail" TechnicalProfileReferenceId="CreateTotpIdentifier-Email" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+        <OrchestrationStep Order="4" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+              <Value>signInName</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="SetTotpIdentifierAsSignInName" TechnicalProfileReferenceId="CreateTotpIdentifier-SignInName" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+      </OrchestrationSteps>
+    </SubJourney>
+
+    <!-- TOTP verification sub journey-->
+    <SubJourney Id="TotpFactor-Verify" Type="Call">
+      <OrchestrationSteps>
+        
+        <!-- Set the required claims numberOfAvailableDevices and totpIdentifier-->
+        <OrchestrationStep Order="1" Type="InvokeSubJourney">
+          <JourneyList>
+            <Candidate SubJourneyReferenceId="SetTotpInitialValue" />
+          </JourneyList>
+        </OrchestrationStep>
+
+        <!-- If current user is not a new one (this is a sign-in flow, and not sign-up), 
+             check the number of available devices. -->
+        <OrchestrationStep Order="2" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+              <Value>newUser</Value>
+              <Value>True</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="CheckAvailableDevices" TechnicalProfileReferenceId="AzureMfa-GetAvailableDevices" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <!-- If the number of available devices isn't zero (user has enrolled before), 
+             begin the TOTP verification session -->
+        <OrchestrationStep Order="3" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+              <Value>numberOfAvailableDevices</Value>
+              <Value>0</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AuthenticatorForSignInBeginSession" TechnicalProfileReferenceId="AzureMfa-BeginVerifyOTP" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <!-- If the number of available devices isn't zero (user has enrolled before), 
+             render the TOTP verification page -->
+        <OrchestrationStep Order="4" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+              <Value>numberOfAvailableDevices</Value>
+              <Value>0</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AuthenticatorForSignIn" TechnicalProfileReferenceId="OTPVerification" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+		
+		<OrchestrationStep Order="5" Type="ClaimsExchange">
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserWriteMFAMethod" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+		
+      </OrchestrationSteps>
+    </SubJourney>
+
+    <!-- TOTP enrollment sub journey-->
+    <SubJourney Id="TotpFactor-Input" Type="Call">
+      <OrchestrationSteps>
+
+        <!-- Set the required claims numberOfAvailableDevices and totpIdentifier-->
+        <OrchestrationStep Order="1" Type="InvokeSubJourney">
+          <JourneyList>
+            <Candidate SubJourneyReferenceId="SetTotpInitialValue" />
+          </JourneyList>
+        </OrchestrationStep>
+
+        <!-- If current user is not a new one (this is a sign-in flow, and not sign-up), 
+             check the number of available devices. -->
+        <OrchestrationStep Order="2" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+              <Value>newUser</Value>
+              <Value>True</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="CheckAvailableDevices" TechnicalProfileReferenceId="AzureMfa-GetAvailableDevices" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <!-- If the number of available devices is zero (user hasn't enrolled before), 
+            render the TOTP enrollment page to scan the QR code that starts the enrollment process -->
+        <OrchestrationStep Order="3" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+              <Value>numberOfAvailableDevices</Value>
+              <Value>0</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AuthenticatorForSignUp" TechnicalProfileReferenceId="EnableOTPAuthentication" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <!-- If the number of available devices is zero (user hasn't enrolled before), 
+             begin the TOTP verification session.  -->
+        <OrchestrationStep Order="4" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+              <Value>numberOfAvailableDevices</Value>
+              <Value>0</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AuthenticatorForSignInBeginSession" TechnicalProfileReferenceId="AzureMfa-BeginVerifyOTP" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <!-- If the number of available devices is zero (user hasn't enrolled before), 
+             render the TOTP verification page.  -->
+        <OrchestrationStep Order="5" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+              <Value>numberOfAvailableDevices</Value>
+              <Value>0</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AuthenticatorForSignIn" TechnicalProfileReferenceId="OTPVerification" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+      </OrchestrationSteps>
+    </SubJourney>
+	 <!-- END of TOTP subjourneys-->
 	</SubJourneys>
 </TrustFrameworkPolicy>
