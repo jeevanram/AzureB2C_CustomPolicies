@@ -834,6 +834,199 @@
 				</TechnicalProfile>
 			</TechnicalProfiles>
 		</ClaimsProvider>
+		
+	    <!--Start TOTP-->
+    <ClaimsProvider>
+      <DisplayName>TOTP</DisplayName>
+      <TechnicalProfiles>
+
+        <!-- Begin the TOTP verification process. 
+             This technical profile is called right before the AzureMfa-VerifyOTP technical profile-->
+        <TechnicalProfile Id="AzureMfa-BeginVerifyOTP">
+          <DisplayName>Create Device</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.AzureMfaProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <Item Key="Operation">BeginVerifyOTP</Item>
+          </Metadata>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="secretKey" />
+            <InputClaim ClaimTypeReferenceId="objectId" />
+            <InputClaim ClaimTypeReferenceId="userPrincipalName" />
+          </InputClaims>
+        </TechnicalProfile>
+
+        <!-- Verify the TOTP verification process. 
+             This technical profile is called immediately after the AzureMfa-BeginVerifyOTP technical profile-->
+        <TechnicalProfile Id="AzureMfa-VerifyOTP">
+          <DisplayName>Verify OTP</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.AzureMfaProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <Item Key="Operation">VerifyOTP</Item>
+          </Metadata>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="otpCode" />
+          </InputClaims>
+        </TechnicalProfile>
+
+        <!-- Check the number of devices available for the user. 
+             If the number of available devices is zero it indicates the user hasn't enrolled yet -->
+        <TechnicalProfile Id="AzureMfa-GetAvailableDevices">
+          <DisplayName>Get Available Devices</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.AzureMfaProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <Item Key="Operation">GetAvailableDevices</Item>
+          </Metadata>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="userPrincipalName" />
+          </InputClaims>
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="numberOfAvailableDevices" />
+          </OutputClaims>
+        </TechnicalProfile>
+
+        <!-- TOTP session manager-->
+        <TechnicalProfile Id="SM-MFA-TOTP">
+          <DisplayName>Session Mananagement Provider</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.SSO.DefaultSSOSessionProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <PersistedClaims>
+            <PersistedClaim ClaimTypeReferenceId="totpIdentifier" />
+            <PersistedClaim ClaimTypeReferenceId="issuer" />
+          </PersistedClaims>
+        </TechnicalProfile>
+
+        <!-- Self-asserted technical profile that asks the user to enroll to the TOTP MFA. The technical profile:
+              1) Creates the TOTP secret
+              2) Sets the issuer name and the URI
+              3) Renders the QR code and the authentication URI
+             -->
+        <TechnicalProfile Id="EnableOTPAuthentication">
+          <DisplayName>Sign up with Authenticator app</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <Item Key="ContentDefinitionReferenceId">api.selfasserted.totp</Item>
+            <Item Key="language.button_continue">Continue</Item>
+          </Metadata>
+          <CryptographicKeys>
+            <Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
+          </CryptographicKeys>
+          <InputClaimsTransformations>
+            <InputClaimsTransformation ReferenceId="CreateSecret" />
+            <InputClaimsTransformation ReferenceId="CreateIssuer" />
+            <InputClaimsTransformation ReferenceId="CreateUriLabel" />
+            <InputClaimsTransformation ReferenceId="CreateUriString" />
+          </InputClaimsTransformations>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="qrCodeContent" />
+            <InputClaim ClaimTypeReferenceId="secretKey" />
+          </InputClaims>
+          <DisplayClaims>
+            <DisplayClaim DisplayControlReferenceId="authenticatorAppIconControl" />
+            <DisplayClaim ClaimTypeReferenceId="QrCodeScanInstruction" />
+            <DisplayClaim DisplayControlReferenceId="totpQrCodeControl" />
+            <DisplayClaim DisplayControlReferenceId="authenticatorInfoControl" />
+          </DisplayClaims>
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="objectId" />
+            <OutputClaim ClaimTypeReferenceId="secretKey" />
+          </OutputClaims>
+          <UseTechnicalProfileForSessionManagement ReferenceId="SM-MFA-TOTP" />
+        </TechnicalProfile>
+
+        <!-- Self-asserted technical profile that verifies the TOTP-->
+        <TechnicalProfile Id="OTPVerification">
+          <DisplayName>Sign in with Authenticator app</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <Item Key="ContentDefinitionReferenceId">api.selfasserted.totp</Item>
+            <Item Key="language.button_continue">Verify</Item>
+          </Metadata>
+          <CryptographicKeys>
+            <Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
+          </CryptographicKeys>
+          <InputClaims></InputClaims>
+          <DisplayClaims>
+            <DisplayClaim ClaimTypeReferenceId="QrCodeVerifyInstruction" />
+            <DisplayClaim ClaimTypeReferenceId="otpCode" Required="true" />
+          </DisplayClaims>
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="objectId" />
+            <OutputClaim ClaimTypeReferenceId="otpCode" Required="true" />
+          </OutputClaims>
+          <ValidationTechnicalProfiles>
+            <ValidationTechnicalProfile ReferenceId="AzureMfa-VerifyOTP" />
+          </ValidationTechnicalProfiles>
+          <UseTechnicalProfileForSessionManagement ReferenceId="SM-MFA-TOTP" />
+        </TechnicalProfile>
+
+        <!-- Set the number of devices to 0 (default value) -->
+        <TechnicalProfile Id="SetTotpDefaultValue">
+          <DisplayName>Set Totp Default Values</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="numberOfAvailableDevices" DefaultValue="0" />
+          </OutputClaims>
+        </TechnicalProfile>
+
+        <!-- Copy the UserId to the totpIdentifier -->
+        <TechnicalProfile Id="CreateTotpIdentifier-UserId">
+          <DisplayName>Set Totp Default Values</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="totpIdentifier" />
+          </OutputClaims>
+          <OutputClaimsTransformations>
+            <OutputClaimsTransformation ReferenceId="UserIdToLogonIdentifier" />
+          </OutputClaimsTransformations>
+        </TechnicalProfile>
+
+        <!-- Copy the SignInName to the totpIdentifier -->
+        <TechnicalProfile Id="CreateTotpIdentifier-SignInName">
+          <DisplayName>Set Totp Default Values</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="totpIdentifier" />
+          </OutputClaims>
+          <OutputClaimsTransformations>
+            <OutputClaimsTransformation ReferenceId="SignInNameToTotpIdentifier" />
+          </OutputClaimsTransformations>
+        </TechnicalProfile>
+
+        <!-- Copy the Email to the totpIdentifier -->
+        <TechnicalProfile Id="CreateTotpIdentifier-Email">
+          <DisplayName>Set Totp Default Values</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="totpIdentifier" />
+          </OutputClaims>
+          <OutputClaimsTransformations>
+            <OutputClaimsTransformation ReferenceId="EmailToTotpIdentifier" />
+          </OutputClaimsTransformations>
+        </TechnicalProfile>
+
+        <TechnicalProfile Id="GetEmailFromReadOnlyEmail">
+          <DisplayName>Get Email From ReadOnlyEmail</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="email" />
+          </OutputClaims>
+          <OutputClaimsTransformations>
+            <OutputClaimsTransformation ReferenceId="GetEmailFromReadOnlyEmail" />
+          </OutputClaimsTransformations>
+        </TechnicalProfile>
+
+        <TechnicalProfile Id="GetEmailAddress">
+          <DisplayName>Get Email Address</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="ReadOnlyEmail" />
+          </OutputClaims>
+          <OutputClaimsTransformations>
+            <OutputClaimsTransformation ReferenceId="GetEmailFromEmails" />
+          </OutputClaimsTransformations>
+        </TechnicalProfile>
+        <!--end of TOTP-->
+      </TechnicalProfiles>
+    </ClaimsProvider>
 	</ClaimsProviders>
 	<UserJourneys>
 		<UserJourney Id="SignUpOrSignInWithMFAConditionalAccess" DefaultCpimIssuerTechnicalProfileReferenceId="JwtIssuer">
