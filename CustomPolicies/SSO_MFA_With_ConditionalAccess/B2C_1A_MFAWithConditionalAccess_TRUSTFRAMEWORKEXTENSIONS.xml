@@ -1280,11 +1280,11 @@
 						<ClaimsExchange Id="SelfAsserted-Select-MFA-Method" TechnicalProfileReferenceId="SelfAsserted-Select-MFA-Method"/>
 					</ClaimsExchanges>
 				</OrchestrationStep>
-				<!-- <OrchestrationStep Order="2" Type="InvokeSubJourney"> -->
-				<!-- <JourneyList> -->
-				<!-- <Candidate SubJourneyReferenceId="MFA-UserVerification" /> -->
-				<!-- </JourneyList> -->
-				<!-- </OrchestrationStep> -->
+				<OrchestrationStep Order="2" Type="InvokeSubJourney">
+				<JourneyList>
+				<Candidate SubJourneyReferenceId="MFA-UserVerification" />
+				</JourneyList>
+				</OrchestrationStep>
 			</OrchestrationSteps>
 		</SubJourney>
 		<SubJourney Id="MFA-VerificationAndRemediation" Type="Call">
